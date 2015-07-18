@@ -126,3 +126,36 @@ func TestPrintValueFloat64(t *testing.T) {
 		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
 	}
 }
+
+// an example implementation
+type MemcachedPlugin struct {
+}
+
+var graphdef map[string](Graphs) = map[string](Graphs){
+	"memcached.cmd": Graphs{
+		Label: "Memcached Command",
+		Unit:  "integer",
+		Metrics: [](Metrics){
+			Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
+		},
+	},
+}
+
+func (m MemcachedPlugin) GraphDefinition() map[string](Graphs) {
+	return graphdef
+}
+
+func (m MemcachedPlugin) FetchMetrics() (map[string]interface{}, error) {
+	var stat map[string]interface{}
+	return stat, nil
+}
+
+func ExampleOutputDefinitions() {
+	var mp MemcachedPlugin
+	helper := NewMackerelPlugin(mp)
+	helper.OutputDefinitions()
+
+	// Output:
+	// # mackerel-agent-plugin
+	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","diff":true,"type":"uint64","stacked":false,"scale":0}]}}}
+}
