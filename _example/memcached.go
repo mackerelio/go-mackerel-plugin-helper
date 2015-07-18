@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	mp "github.com/mackerelio/go-mackerel-plugin"
+	mp "github.com/mackerelio/go-mackerel-plugin-helper"
 )
 
 // https://github.com/memcached/memcached/blob/master/doc/protocol.txt
