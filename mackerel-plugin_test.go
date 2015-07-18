@@ -1,6 +1,7 @@
 package mackerelplugin
 
 import (
+	"bytes"
 	"math"
 	"testing"
 	"time"
@@ -34,7 +35,7 @@ func TestCalcDiffWithUInt32WithReset(t *testing.T) {
 	diff, err := mp.calcDiffUint32(val, now, lastval, last, 10)
 	if err != nil {
 	} else {
-		t.Error("calcDiffUint32 with counter reset should cause an error: %f", diff)
+		t.Errorf("calcDiffUint32 with counter reset should cause an error: %f", diff)
 	}
 }
 
@@ -55,6 +56,21 @@ func TestCalcDiffWithUInt32Overflow(t *testing.T) {
 	}
 }
 
+func TestCalcDiffWithUInt64WithReset(t *testing.T) {
+	var mp MackerelPlugin
+
+	val := uint64(10)
+	now := time.Now()
+	lastval := uint64(12345)
+	last := time.Unix(now.Unix()-60, 0)
+
+	diff, err := mp.calcDiffUint64(val, now, lastval, last, 10)
+	if err != nil {
+	} else {
+		t.Errorf("calcDiffUint64 with counter reset should cause an error: %f", diff)
+	}
+}
+
 func TestCalcDiffWithUInt64Overflow(t *testing.T) {
 	var mp MackerelPlugin
 
@@ -69,5 +85,44 @@ func TestCalcDiffWithUInt64Overflow(t *testing.T) {
 	}
 	if err != nil {
 		t.Error("calcDiff causes an error")
+	}
+}
+
+func TestPrintValueUint32(t *testing.T) {
+	var mp MackerelPlugin
+	s := new(bytes.Buffer)
+	var now = time.Unix(1437227240, 0)
+	mp.printValue(s, "test", uint32(10), now)
+
+	expected := []byte("test\t10\t1437227240\n")
+
+	if bytes.Compare(expected, s.Bytes()) != 0 {
+		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
+	}
+}
+
+func TestPrintValueUint64(t *testing.T) {
+	var mp MackerelPlugin
+	s := new(bytes.Buffer)
+	var now = time.Unix(1437227240, 0)
+	mp.printValue(s, "test", uint64(10), now)
+
+	expected := []byte("test\t10\t1437227240\n")
+
+	if bytes.Compare(expected, s.Bytes()) != 0 {
+		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
+	}
+}
+
+func TestPrintValueFloat64(t *testing.T) {
+	var mp MackerelPlugin
+	s := new(bytes.Buffer)
+	var now = time.Unix(1437227240, 0)
+	mp.printValue(s, "test", float64(10.0), now)
+
+	expected := []byte("test\t10.000000\t1437227240\n")
+
+	if bytes.Compare(expected, s.Bytes()) != 0 {
+		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
 	}
 }
