@@ -72,7 +72,7 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&stat)
-	lastTime = time.Unix(stat["_lastTime"].(int64), 0)
+	lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
 	if err != nil {
 		return stat, lastTime, err
 	}
