@@ -178,15 +178,15 @@ func (h *MackerelPlugin) OutputValues() {
 				if ok {
 					var lastDiff float64
 					if lastStat[".last_diff."+metric.Name] != nil {
-						lastDiff = lastStat[".last_diff."+metric.Name].(float64)
+						lastDiff = toFloat64(lastStat[".last_diff."+metric.Name])
 					}
 					switch metric.Type {
 					case "uint32":
-						value, err = h.calcDiffUint32(value.(uint32), now, toUint32(lastStat[metric.Name]), lastTime, lastDiff)
+						value, err = h.calcDiffUint32(toUint32(value), now, toUint32(lastStat[metric.Name]), lastTime, lastDiff)
 					case "uint64":
-						value, err = h.calcDiffUint64(value.(uint64), now, toUint64(lastStat[metric.Name]), lastTime, lastDiff)
+						value, err = h.calcDiffUint64(toUint64(value), now, toUint64(lastStat[metric.Name]), lastTime, lastDiff)
 					default:
-						value, err = h.calcDiff(value.(float64), now, toFloat64(lastStat[metric.Name]), lastTime)
+						value, err = h.calcDiff(toFloat64(value), now, toFloat64(lastStat[metric.Name]), lastTime)
 					}
 					if err != nil {
 						log.Println("OutputValues: ", err)
@@ -202,11 +202,11 @@ func (h *MackerelPlugin) OutputValues() {
 			if metric.Scale != 0 {
 				switch metric.Type {
 				case "uint32":
-					value = value.(uint32) * uint32(metric.Scale)
+					value = toUint32(value) * uint32(metric.Scale)
 				case "uint64":
-					value = value.(uint64) * uint64(metric.Scale)
+					value = toUint64(value) * uint64(metric.Scale)
 				default:
-					value = value.(float64) * metric.Scale
+					value = toFloat64(value) * metric.Scale
 				}
 			}
 
