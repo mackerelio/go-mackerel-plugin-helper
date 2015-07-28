@@ -186,7 +186,7 @@ func (h *MackerelPlugin) OutputValues() {
 					case "uint64":
 						value, err = h.calcDiffUint64(value.(uint64), now, toUint64(lastStat[metric.Name]), lastTime, lastDiff)
 					default:
-						value, err = h.calcDiff(value.(float64), now, lastStat[metric.Name].(float64), lastTime)
+						value, err = h.calcDiff(value.(float64), now, toFloat64(lastStat[metric.Name]), lastTime)
 					}
 					if err != nil {
 						log.Println("OutputValues: ", err)
@@ -246,6 +246,11 @@ func toUint32(value interface{}) uint32 {
 		ret = uint32(value.(uint64))
 	case float64:
 		ret = uint32(value.(float64))
+	case string:
+		v, err := strconv.ParseUint(value.(string), 10, 32)
+		if err != nil {
+			ret = uint32(v)
+		}
 	}
 	return ret
 }
@@ -259,6 +264,8 @@ func toUint64(value interface{}) uint64 {
 		ret = value.(uint64)
 	case float64:
 		ret = uint64(value.(float64))
+	case string:
+		ret, _ = strconv.ParseUint(value.(string), 10, 64)
 	}
 	return ret
 }
@@ -272,6 +279,8 @@ func toFloat64(value interface{}) float64 {
 		ret = float64(value.(uint64))
 	case float64:
 		ret = value.(float64)
+	case string:
+		ret, _ = strconv.ParseFloat(value.(string), 64)
 	}
 	return ret
 }
