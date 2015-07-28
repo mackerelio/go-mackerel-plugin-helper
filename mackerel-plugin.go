@@ -72,7 +72,12 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&stat)
-	lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
+	switch stat["_lastTime"].(type) {
+	case float64:
+		lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
+	case int64:
+		lastTime = time.Unix(stat["_lastTime"].(int64), 0)
+	}
 	if err != nil {
 		return stat, lastTime, err
 	}
@@ -86,7 +91,7 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	}
 	defer f.Close()
 
-	values["_lastTime"] = float64(now.Unix())
+	values["_lastTime"] = now.Unix()
 	encoder := json.NewEncoder(f)
 	err = encoder.Encode(values)
 	if err != nil {
@@ -166,26 +171,28 @@ func (h *MackerelPlugin) OutputValues() {
 				default:
 					value, _ = strconv.ParseFloat(value.(string), 64)
 				}
-			default:
-				continue
 			}
 
 			if metric.Diff {
 				_, ok := lastStat[metric.Name]
 				if ok {
-					lastDiff := lastStat[".last_diff."+metric.Name].(float64)
+					var lastDiff float64
+					if lastStat[".last_diff."+metric.Name] != nil {
+						lastDiff = lastStat[".last_diff."+metric.Name].(float64)
+					}
 					switch metric.Type {
 					case "uint32":
-						value, err = h.calcDiffUint32(value.(uint32), now, lastStat[metric.Name].(uint32), lastTime, lastDiff)
-						stat[".last_diff."+metric.Name] = value
+						value, err = h.calcDiffUint32(value.(uint32), now, toUint32(lastStat[metric.Name]), lastTime, lastDiff)
 					case "uint64":
-						value, err = h.calcDiffUint64(value.(uint64), now, lastStat[metric.Name].(uint64), lastTime, lastDiff)
-						stat[".last_diff."+metric.Name] = value
+						value, err = h.calcDiffUint64(value.(uint64), now, toUint64(lastStat[metric.Name]), lastTime, lastDiff)
 					default:
 						value, err = h.calcDiff(value.(float64), now, lastStat[metric.Name].(float64), lastTime)
 					}
 					if err != nil {
 						log.Println("OutputValues: ", err)
+						continue
+					} else {
+						stat[".last_diff."+metric.Name] = value
 					}
 				} else {
 					log.Printf("%s is not exist at last fetch\n", metric.Name)
@@ -228,4 +235,43 @@ func (h *MackerelPlugin) OutputDefinitions() {
 		log.Fatalln("OutputDefinitions: ", err)
 	}
 	fmt.Println(string(b))
+}
+
+func toUint32(value interface{}) uint32 {
+	var ret uint32
+	switch value.(type) {
+	case uint32:
+		ret = value.(uint32)
+	case uint64:
+		ret = uint32(value.(uint64))
+	case float64:
+		ret = uint32(value.(float64))
+	}
+	return ret
+}
+
+func toUint64(value interface{}) uint64 {
+	var ret uint64
+	switch value.(type) {
+	case uint32:
+		ret = uint64(value.(uint32))
+	case uint64:
+		ret = value.(uint64)
+	case float64:
+		ret = uint64(value.(float64))
+	}
+	return ret
+}
+
+func toFloat64(value interface{}) float64 {
+	var ret float64
+	switch value.(type) {
+	case uint32:
+		ret = float64(value.(uint32))
+	case uint64:
+		ret = float64(value.(uint64))
+	case float64:
+		ret = value.(float64)
+	}
+	return ret
 }
