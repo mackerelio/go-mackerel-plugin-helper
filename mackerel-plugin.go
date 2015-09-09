@@ -218,6 +218,10 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	}
 	for k, _ := range *stat {
 		if re.FindString(k) != "" {
+			// should not call formatValues if metrics has the prefix '.last_diff.' or just '.'
+			if strings.HasPrefix(k, ".") {
+				continue
+			}
 			metricEach := metric
 			metricEach.Name = k
 			h.formatValues("", metricEach, stat, lastStat, now, lastTime)
