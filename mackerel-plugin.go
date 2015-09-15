@@ -208,20 +208,16 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 }
 
 func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
-	regexp_str := prefix + "." + metric.Name
-	regexp_str = strings.Replace(regexp_str, ".", "\\.", -1)
-	regexp_str = strings.Replace(regexp_str, "*", "[-a-zA-Z0-9_]+", -1)
-	regexp_str = strings.Replace(regexp_str, "#", "[-a-zA-Z0-9_]+", -1)
-	re, err := regexp.Compile(regexp_str)
+	regexpStr := `\A` + prefix + "." + metric.Name
+	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
+	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
+	regexpStr = strings.Replace(regexpStr, "#", "[-a-zA-Z0-9_]+", -1)
+	re, err := regexp.Compile(regexpStr)
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
 	}
 	for k, _ := range *stat {
-		if re.FindString(k) != "" {
-			// should not call formatValues if metrics has the prefix '.last_diff.' or just '.'
-			if strings.HasPrefix(k, ".") {
-				continue
-			}
+		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
 			h.formatValues("", metricEach, stat, lastStat, now, lastTime)
