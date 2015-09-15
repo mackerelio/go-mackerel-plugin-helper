@@ -186,6 +186,7 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 			}
 		} else {
 			log.Printf("%s does not exist at last fetch\n", metric.Name)
+			return
 		}
 	}
 
