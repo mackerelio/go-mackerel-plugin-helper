@@ -148,8 +148,11 @@ func (h *MackerelPlugin) Tempfilename() string {
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
-	var value interface{}
-	value = (*stat)[metric.Name]
+	value, ok := (*stat)[metric.Name]
+	if !ok || value == nil {
+		return
+	}
+
 	switch value.(type) {
 	case string:
 		switch metric.Type {
