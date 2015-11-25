@@ -24,6 +24,20 @@ func TestCalcDiff(t *testing.T) {
 	}
 }
 
+func TestCalcDiffWithReset(t *testing.T) {
+	var mp MackerelPlugin
+
+	val := 10.0
+	now := time.Now()
+	lastval := 12345.0
+	last := time.Unix(now.Unix()-60, 0)
+
+	diff, err := mp.calcDiff(val, now, lastval, last)
+	if err == nil {
+		t.Errorf("calcDiffUint32 with counter reset should cause an error: %f", diff)
+	}
+}
+
 func TestCalcDiffWithUInt32WithReset(t *testing.T) {
 	var mp MackerelPlugin
 
@@ -147,6 +161,19 @@ func ExampleFormatValuesWithCounterReset() {
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
 	stat := map[string]interface{}{"cmd_get": uint64(10)}
 	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+}
+
+func ExampleFormatFloatValuesWithCounterReset() {
+	var mp MackerelPlugin
+	prefix := "foo"
+	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "float"}
+	stat := map[string]interface{}{"cmd_get": 10.0}
+	lastStat := map[string]interface{}{"cmd_get": 500.0, ".last_diff.cmd_get": 300.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
 	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
