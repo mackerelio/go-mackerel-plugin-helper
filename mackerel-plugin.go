@@ -111,7 +111,10 @@ func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float6
 
 	diff := (value - lastValue) * 60 / float64(diffTime)
 
-	return diff, nil
+	if lastValue <= value {
+		return diff, nil
+	}
+	return 0.0, errors.New("Counter seems to be reseted.")
 }
 
 func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue uint32, lastTime time.Time, lastDiff float64) (float64, error) {
