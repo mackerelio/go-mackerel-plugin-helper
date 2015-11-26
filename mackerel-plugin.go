@@ -103,7 +103,7 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	return nil
 }
 
-func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float64, lastTime time.Time) (float64, error) {
+func calcDiff(value float64, now time.Time, lastValue float64, lastTime time.Time) (float64, error) {
 	diffTime := now.Unix() - lastTime.Unix()
 	if diffTime > 600 {
 		return 0, errors.New("Too long duration")
@@ -117,35 +117,6 @@ func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float6
 	return 0.0, errors.New("Counter seems to be reset.")
 }
 
-func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue uint32, lastTime time.Time, lastDiff float64) (float64, error) {
-	diffTime := now.Unix() - lastTime.Unix()
-	if diffTime > 600 {
-		return 0, errors.New("Too long duration")
-	}
-
-	diff := float64((value-lastValue)*60) / float64(diffTime)
-
-	if lastValue <= value || diff < lastDiff*10 {
-		return diff, nil
-	}
-	return 0.0, errors.New("Counter seems to be reset.")
-
-}
-
-func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue uint64, lastTime time.Time, lastDiff float64) (float64, error) {
-	diffTime := now.Unix() - lastTime.Unix()
-	if diffTime > 600 {
-		return 0, errors.New("Too long duration")
-	}
-
-	diff := float64((value-lastValue)*60) / float64(diffTime)
-
-	if lastValue <= value || diff < lastDiff*10 {
-		return diff, nil
-	}
-	return 0.0, errors.New("Counter seems to be reset.")
-}
-
 func calcDiffUInt(value uint64, now time.Time, lastValue uint64, lastTime time.Time, lastDiff float64, max uint64) (float64, error) {
 	diffTime := now.Unix() - lastTime.Unix()
 	if diffTime > 600 {
@@ -154,6 +125,7 @@ func calcDiffUInt(value uint64, now time.Time, lastValue uint64, lastTime time.T
 
 	diff := 0.0
 	if lastValue > value {
+		// overflow or counter reset
 		diff = float64(max - lastValue + 1 + value)
 	} else {
 		diff = float64(value - lastValue)
@@ -197,12 +169,14 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 			}
 			var err error
 			switch metric.Type {
-			case "uint32":
-				value, err = calcDiffUInt(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff, math.MaxUint32)
-			case "uint64":
-				value, err = calcDiffUInt(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff, math.MaxUint64)
+			case "uint32", "uint64":
+				max := uint64(math.MaxUint64)
+				if metric.Type == "uint32" {
+					max = math.MaxUint32
+				}
+				value, err = calcDiffUInt(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff, max)
 			default:
-				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[metric.Name]), lastTime)
+				value, err = calcDiff(toFloat64(value), now, toFloat64((*lastStat)[metric.Name]), lastTime)
 			}
 			if err != nil {
 				log.Println("OutputValues: ", err)
