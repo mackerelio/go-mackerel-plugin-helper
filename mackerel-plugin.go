@@ -146,6 +146,26 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	return 0.0, errors.New("Counter seems to be reset.")
 }
 
+func calcDiffUInt(value uint64, now time.Time, lastValue uint64, lastTime time.Time, lastDiff float64, max uint64) (float64, error) {
+	diffTime := now.Unix() - lastTime.Unix()
+	if diffTime > 600 {
+		return 0, errors.New("Too long duration")
+	}
+
+	diff := 0.0
+	if lastValue > value {
+		diff = float64(max - lastValue + 1 + value)
+	} else {
+		diff = float64(value - lastValue)
+	}
+	diff = diff * 60 / float64(diffTime)
+
+	if lastValue > value && diff >= lastDiff*10 {
+		return 0.0, errors.New("Counter seems to be reseted.")
+	}
+	return diff, nil
+}
+
 func (h *MackerelPlugin) Tempfilename() string {
 	return h.Tempfile
 }
@@ -178,9 +198,9 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 			var err error
 			switch metric.Type {
 			case "uint32":
-				value, err = h.calcDiffUint32(toUint32(value), now, toUint32((*lastStat)[metric.Name]), lastTime, lastDiff)
+				value, err = calcDiffUInt(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff, math.MaxUint32)
 			case "uint64":
-				value, err = h.calcDiffUint64(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff)
+				value, err = calcDiffUInt(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff, math.MaxUint64)
 			default:
 				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[metric.Name]), lastTime)
 			}
