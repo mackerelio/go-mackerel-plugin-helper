@@ -232,6 +232,14 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	}
 }
 
+func (h *MackerelPlugin) Run() {
+	if os.Getenv("MACKEREL_AGENT_PLUGIN_META") != "" {
+		h.OutputDefinitions()
+	} else {
+		h.OutputValues()
+	}
+}
+
 func (h *MackerelPlugin) OutputValues() {
 	now := time.Now()
 	stat, err := h.FetchMetrics()
