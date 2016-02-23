@@ -17,7 +17,7 @@ import (
 type Metrics struct {
 	Name    string  `json:"name"`
 	Label   string  `json:"label"`
-	Diff    bool    `json:"diff"`
+	Diff    bool    `json:"-"`
 	Type    string  `json:"type"`
 	Stacked bool    `json:"stacked"`
 	Scale   float64 `json:"scale"`
