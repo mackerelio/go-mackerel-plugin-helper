@@ -114,7 +114,7 @@ func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float6
 	if lastValue <= value {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reseted.")
+	return 0.0, errors.New("Counter seems to be reset.")
 }
 
 func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue uint32, lastTime time.Time, lastDiff float64) (float64, error) {
@@ -128,7 +128,7 @@ func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue u
 	if lastValue <= value || diff < lastDiff*10 {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reseted.")
+	return 0.0, errors.New("Counter seems to be reset.")
 
 }
 
@@ -143,7 +143,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	if lastValue <= value || diff < lastDiff*10 {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reseted.")
+	return 0.0, errors.New("Counter seems to be reset.")
 }
 
 func (h *MackerelPlugin) Tempfilename() string {
