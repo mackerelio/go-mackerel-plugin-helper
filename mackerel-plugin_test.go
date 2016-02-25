@@ -295,3 +295,57 @@ func ExampleOutputDefinitions() {
 	// # mackerel-agent-plugin
 	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","diff":true,"type":"uint64","stacked":false,"scale":0}]}}}
 }
+
+func TestToUint32(t *testing.T) {
+	if ret := toUint32(uint32(100)); ret != uint32(100) {
+		t.Errorf("toUint32(uint32) returns incorrect value: %v expected to be %v", ret, uint32(100))
+	}
+
+	if ret := toUint32(uint64(100)); ret != uint32(100) {
+		t.Errorf("toUint32(uint64) returns incorrect value: %v expected to be %v", ret, uint32(100))
+	}
+
+	if ret := toUint32(float64(100)); ret != uint32(100) {
+		t.Errorf("toUint32(float64) returns incorrect value: %v expected to be %v", ret, uint32(100))
+	}
+
+	if ret := toUint32("100"); ret != uint32(100) {
+		t.Errorf("toUint32(string) returns incorrect value: %v expected to be %v", ret, uint32(100))
+	}
+}
+
+func TestToUint64(t *testing.T) {
+	if ret := toUint64(uint32(100)); ret != uint64(100) {
+		t.Errorf("toUint64(uint32) returns incorrect value: %v expected to be %v", ret, uint64(100))
+	}
+
+	if ret := toUint64(uint64(100)); ret != uint64(100) {
+		t.Errorf("toUint64(uint64) returns incorrect value: %v expected to be %v", ret, uint64(100))
+	}
+
+	if ret := toUint64(float64(100)); ret != uint64(100) {
+		t.Errorf("toUint64(float64) returns incorrect value: %v expected to be %v", ret, uint64(100))
+	}
+
+	if ret := toUint64("100"); ret != uint64(100) {
+		t.Errorf("toUint64(string) returns incorrect value: %v expected to be %v", ret, uint64(100))
+	}
+}
+
+func TestToFloat64(t *testing.T) {
+	if ret := toFloat64(uint32(100)); ret != float64(100) {
+		t.Errorf("toFloat64(uint32) returns incorrect value: %v expected to be %v", ret, float64(100))
+	}
+
+	if ret := toFloat64(uint64(100)); ret != float64(100) {
+		t.Errorf("toFloat64(uint64) returns incorrect value: %v expected to be %v", ret, float64(100))
+	}
+
+	if ret := toFloat64(float64(100)); ret != float64(100) {
+		t.Errorf("toFloat64(float64) returns incorrect value: %v expected to be %v", ret, float64(100))
+	}
+
+	if ret := toFloat64("100"); ret != float64(100) {
+		t.Errorf("toFloat64(string) returns incorrect value: %v expected to be %v", ret, float64(100))
+	}
+}
