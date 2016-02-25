@@ -295,7 +295,7 @@ func toUint32(value interface{}) uint32 {
 		ret = uint32(value.(float64))
 	case string:
 		v, err := strconv.ParseUint(value.(string), 10, 32)
-		if err != nil {
+		if err == nil {
 			ret = uint32(v)
 		}
 	}
