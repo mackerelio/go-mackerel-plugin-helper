@@ -155,6 +155,38 @@ func ExampleFormatValues() {
 	// foo.cmd_get	500.000000	1437227240
 }
 
+func ExampleFormatValuesNeedPrefix() {
+	var mp MackerelPlugin
+	prefixA := "foo"
+	metricA := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", NeedPrefix: true}
+	prefixB := "bar"
+	metricB := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", NeedPrefix: true}
+	stat := map[string]interface{}{"foo.cmd_get": uint64(1000), "bar.cmd_get": uint64(1234)}
+	lastStat := map[string]interface{}{"foo.cmd_get": uint64(500), ".last_diff.foo.cmd_get": 300.0, "bar.cmd_get": uint64(600), ".last_diff.bar.cmd_get": 400.0}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValues(prefixA, metricA, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefixB, metricB, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// foo.cmd_get	500.000000	1437227240
+	// bar.cmd_get	634.000000	1437227240
+}
+
+func ExampleFormatValuesNeedPrefixButNoPrefix() {
+	var mp MackerelPlugin
+	prefix := ""
+	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", NeedPrefix: true}
+	stat := map[string]interface{}{"cmd_get": uint64(1000)}
+	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// cmd_get	500.000000	1437227240
+}
+
 func ExampleFormatValuesWithCounterReset() {
 	var mp MackerelPlugin
 	prefix := "foo"
@@ -225,6 +257,21 @@ func ExampleFormatValuesWithWildcard() {
 	var mp MackerelPlugin
 	prefix := "foo.#"
 	metric := Metrics{Name: "bar", Label: "Get", Diff: true, Type: "uint64"}
+	stat := map[string]interface{}{"foo.1.bar": uint64(1000), "foo.2.bar": uint64(2000)}
+	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// foo.1.bar	500.000000	1437227240
+}
+
+func ExampleFormatValuesWithWildcardAndNeedPrefix() {
+	// NeedPrefix should be ignored with WildCard
+	var mp MackerelPlugin
+	prefix := "foo.#"
+	metric := Metrics{Name: "bar", Label: "Get", Diff: true, Type: "uint64", NeedPrefix: true}
 	stat := map[string]interface{}{"foo.1.bar": uint64(1000), "foo.2.bar": uint64(2000)}
 	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
 	now := time.Unix(1437227240, 0)

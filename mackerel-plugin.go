@@ -15,12 +15,13 @@ import (
 )
 
 type Metrics struct {
-	Name    string  `json:"name"`
-	Label   string  `json:"label"`
-	Diff    bool    `json:"-"`
-	Type    string  `json:"type"`
-	Stacked bool    `json:"stacked"`
-	Scale   float64 `json:"scale"`
+	Name       string  `json:"name"`
+	Label      string  `json:"label"`
+	Diff       bool    `json:"-"`
+	Type       string  `json:"type"`
+	Stacked    bool    `json:"stacked"`
+	Scale      float64 `json:"scale"`
+	NeedPrefix bool    `json:"-"`
 }
 
 type Graphs struct {
@@ -151,7 +152,11 @@ func (h *MackerelPlugin) Tempfilename() string {
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
-	value, ok := (*stat)[metric.Name]
+	name := metric.Name
+	if metric.NeedPrefix && len(prefix) > 0 {
+		name = prefix + "." + name
+	}
+	value, ok := (*stat)[name]
 	if !ok || value == nil {
 		return
 	}
@@ -169,29 +174,29 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 	}
 
 	if metric.Diff {
-		_, ok := (*lastStat)[metric.Name]
+		_, ok := (*lastStat)[name]
 		if ok {
 			var lastDiff float64
-			if (*lastStat)[".last_diff."+metric.Name] != nil {
-				lastDiff = toFloat64((*lastStat)[".last_diff."+metric.Name])
+			if (*lastStat)[".last_diff."+name] != nil {
+				lastDiff = toFloat64((*lastStat)[".last_diff."+name])
 			}
 			var err error
 			switch metric.Type {
 			case "uint32":
-				value, err = h.calcDiffUint32(toUint32(value), now, toUint32((*lastStat)[metric.Name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint32(toUint32(value), now, toUint32((*lastStat)[name]), lastTime, lastDiff)
 			case "uint64":
-				value, err = h.calcDiffUint64(toUint64(value), now, toUint64((*lastStat)[metric.Name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint64(toUint64(value), now, toUint64((*lastStat)[name]), lastTime, lastDiff)
 			default:
-				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[metric.Name]), lastTime)
+				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[name]), lastTime)
 			}
 			if err != nil {
 				log.Println("OutputValues: ", err)
 				return
 			} else {
-				(*stat)[".last_diff."+metric.Name] = value
+				(*stat)[".last_diff."+name] = value
 			}
 		} else {
-			log.Printf("%s does not exist at last fetch\n", metric.Name)
+			log.Printf("%s does not exist at last fetch\n", name)
 			return
 		}
 	}
