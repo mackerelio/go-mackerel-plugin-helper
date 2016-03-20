@@ -34,13 +34,18 @@ type Plugin interface {
 	GraphDefinition() map[string]Graphs
 }
 
+type PluginWithPrefix interface {
+	Plugin
+	GetPrefix() string
+}
+
 type MackerelPlugin struct {
 	Plugin
 	Tempfile string
 }
 
 func NewMackerelPlugin(plugin Plugin) MackerelPlugin {
-	mp := MackerelPlugin{plugin, "/tmp/mackerel-plugin-default"}
+	mp := MackerelPlugin{Plugin: plugin}
 	return mp
 }
 
@@ -147,6 +152,13 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 }
 
 func (h *MackerelPlugin) Tempfilename() string {
+	if h.Tempfile == "" {
+		prefix := "default"
+		if p, ok := h.Plugin.(PluginWithPrefix); ok {
+			prefix = p.GetPrefix()
+		}
+		h.Tempfile = fmt.Sprintf("/tmp/mackerel-plugin-%s", prefix)
+	}
 	return h.Tempfile
 }
 
