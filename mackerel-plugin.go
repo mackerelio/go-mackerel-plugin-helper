@@ -318,7 +318,12 @@ func (h *MackerelPlugin) OutputDefinitions() {
 	for key, graph := range h.GraphDefinition() {
 		k := key
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
-			k = strings.Join([]string{p.GetPrefix(), k}, ".")
+			prefix := p.GetPrefix()
+			if k == "" {
+				k = prefix
+			} else {
+				k = prefix + "." + k
+			}
 		}
 		graphs[k] = graph
 	}

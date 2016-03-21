@@ -353,11 +353,26 @@ func TestToFloat64(t *testing.T) {
 type testP struct{}
 
 func (t testP) FetchMetrics() (map[string]interface{}, error) {
-	return nil, nil
+	ret := make(map[string]interface{})
+	ret["bar"] = 15
+	return ret, nil
 }
 
 func (t testP) GraphDefinition() map[string]Graphs {
-	return nil
+	return map[string](Graphs){
+		"": Graphs{
+			Unit: "integer",
+			Metrics: [](Metrics){
+				Metrics{Name: "bar"},
+			},
+		},
+		"fuga": Graphs{
+			Unit: "float",
+			Metrics: [](Metrics){
+				Metrics{Name: "baz"},
+			},
+		},
+	}
 }
 
 func (t testP) GetPrefix() string {
@@ -370,6 +385,15 @@ func TestPluginWithPrefix(t *testing.T) {
 	if p.Tempfilename() != expect {
 		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
 	}
+}
+
+func ExamplePluginWithPrefixOutputDefinitions() {
+	helper := NewMackerelPlugin(testP{})
+	helper.OutputDefinitions()
+
+	// Output:
+	// # mackerel-agent-plugin
+	// {"graphs":{"testP":{"label":"","unit":"integer","metrics":[{"name":"bar","label":"","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"","unit":"float","metrics":[{"name":"baz","label":"","type":"","stacked":false,"scale":0}]}}}
 }
 
 type testPHasDiff struct{}
