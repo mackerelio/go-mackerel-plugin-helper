@@ -243,11 +243,15 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 		}
 	}
 
-	if len(prefix) > 0 {
-		h.printValue(os.Stdout, prefix+"."+metric.Name, value, now)
-	} else {
-		h.printValue(os.Stdout, metric.Name, value, now)
+	metricNames := []string{}
+	if p, ok := h.Plugin.(PluginWithPrefix); ok {
+		metricNames = append(metricNames, p.GetPrefix())
 	}
+	if len(prefix) > 0 {
+		metricNames = append(metricNames, prefix)
+	}
+	metricNames = append(metricNames, metric.Name)
+	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, now)
 }
 
 func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
@@ -310,10 +314,17 @@ type GraphDef struct {
 
 func (h *MackerelPlugin) OutputDefinitions() {
 	fmt.Println("# mackerel-agent-plugin")
-	var graphs GraphDef
-	graphs.Graphs = h.GraphDefinition()
-
-	b, err := json.Marshal(graphs)
+	graphs := make(map[string]Graphs)
+	for key, graph := range h.GraphDefinition() {
+		k := key
+		if p, ok := h.Plugin.(PluginWithPrefix); ok {
+			k = strings.Join([]string{p.GetPrefix(), k}, ".")
+		}
+		graphs[k] = graph
+	}
+	var graphdef GraphDef
+	graphdef.Graphs = graphs
+	b, err := json.Marshal(graphdef)
 	if err != nil {
 		log.Fatalln("OutputDefinitions: ", err)
 	}
