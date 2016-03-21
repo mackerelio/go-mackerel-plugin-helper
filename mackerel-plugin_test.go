@@ -293,7 +293,7 @@ func ExampleOutputDefinitions() {
 
 	// Output:
 	// # mackerel-agent-plugin
-	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","type":"uint64","stacked":false,"scale":0}]}}}
+	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","stacked":false}]}}}
 }
 
 func TestToUint32(t *testing.T) {
