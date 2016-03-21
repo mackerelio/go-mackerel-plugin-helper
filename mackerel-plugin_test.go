@@ -376,7 +376,7 @@ func (t testP) GraphDefinition() map[string]Graphs {
 	}
 }
 
-func (t testP) GetPrefix() string {
+func (t testP) GetMetricKeyPrefix() string {
 	return "testP"
 }
 

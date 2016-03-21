@@ -36,7 +36,7 @@ type Plugin interface {
 
 type PluginWithPrefix interface {
 	Plugin
-	GetPrefix() string
+	GetMetricKeyPrefix() string
 }
 
 type MackerelPlugin struct {
@@ -179,7 +179,7 @@ func (h *MackerelPlugin) Tempfilename() string {
 	if h.Tempfile == "" {
 		prefix := "default"
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
-			prefix = p.GetPrefix()
+			prefix = p.GetMetricKeyPrefix()
 		}
 		h.Tempfile = fmt.Sprintf("/tmp/mackerel-plugin-%s", prefix)
 	}
@@ -245,7 +245,7 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 
 	metricNames := []string{}
 	if p, ok := h.Plugin.(PluginWithPrefix); ok {
-		metricNames = append(metricNames, p.GetPrefix())
+		metricNames = append(metricNames, p.GetMetricKeyPrefix())
 	}
 	if len(prefix) > 0 {
 		metricNames = append(metricNames, prefix)
@@ -318,7 +318,7 @@ func (h *MackerelPlugin) OutputDefinitions() {
 	for key, graph := range h.GraphDefinition() {
 		k := key
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
-			prefix := p.GetPrefix()
+			prefix := p.GetMetricKeyPrefix()
 			if k == "" {
 				k = prefix
 			} else {
