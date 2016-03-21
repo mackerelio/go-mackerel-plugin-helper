@@ -42,11 +42,29 @@ type PluginWithPrefix interface {
 type MackerelPlugin struct {
 	Plugin
 	Tempfile string
+	diff     *bool
 }
 
 func NewMackerelPlugin(plugin Plugin) MackerelPlugin {
 	mp := MackerelPlugin{Plugin: plugin}
 	return mp
+}
+
+func (h *MackerelPlugin) hasDiff() bool {
+	if h.diff == nil {
+		diff := false
+		h.diff = &diff
+	DiffCheck:
+		for _, graph := range h.GraphDefinition() {
+			for _, metric := range graph.Metrics {
+				if metric.Diff {
+					*h.diff = true
+					break DiffCheck
+				}
+			}
+		}
+	}
+	return *h.diff
 }
 
 func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, now time.Time) {
