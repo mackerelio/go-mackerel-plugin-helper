@@ -349,3 +349,26 @@ func TestToFloat64(t *testing.T) {
 		t.Errorf("toFloat64(string) returns incorrect value: %v expected to be %v", ret, float64(100))
 	}
 }
+
+type testP struct {
+}
+
+func (t testP) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testP) GraphDefinition() map[string]Graphs {
+	return nil
+}
+
+func (t testP) GetPrefix() string {
+	return "testP"
+}
+
+func TestPluginWithPrefix(t *testing.T) {
+	p := NewMackerelPlugin(testP{})
+	expect := "/tmp/mackerel-plugin-testP"
+	if p.Tempfilename() != expect {
+		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
+	}
+}
