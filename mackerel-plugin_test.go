@@ -354,7 +354,8 @@ type testP struct{}
 
 func (t testP) FetchMetrics() (map[string]interface{}, error) {
 	ret := make(map[string]interface{})
-	ret["bar"] = 15
+	ret["bar"] = 15.0
+	ret["baz"] = 18.0
 	return ret, nil
 }
 
@@ -394,6 +395,34 @@ func ExamplePluginWithPrefixOutputDefinitions() {
 	// Output:
 	// # mackerel-agent-plugin
 	// {"graphs":{"testP":{"label":"","unit":"integer","metrics":[{"name":"bar","label":"","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"","unit":"float","metrics":[{"name":"baz","label":"","type":"","stacked":false,"scale":0}]}}}
+}
+
+func ExamplePluginWithPrefixOutputValues() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := ""
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.bar	15.000000	1437227240
+}
+
+func ExamplePluginWithPrefixOutputValues2() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := "fuga"
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.fuga.baz	18.000000	1437227240
 }
 
 type testPHasDiff struct{}
