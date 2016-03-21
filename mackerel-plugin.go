@@ -83,6 +83,9 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 }
 
 func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, error) {
+	if !h.hasDiff() {
+		return nil, time.Unix(0, 0), nil
+	}
 	lastTime := time.Now()
 
 	f, err := os.Open(h.Tempfilename())
@@ -110,6 +113,9 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 }
 
 func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time) error {
+	if !h.hasDiff() {
+		return nil
+	}
 	f, err := os.Create(h.Tempfilename())
 	if err != nil {
 		return err
