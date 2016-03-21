@@ -350,8 +350,7 @@ func TestToFloat64(t *testing.T) {
 	}
 }
 
-type testP struct {
-}
+type testP struct{}
 
 func (t testP) FetchMetrics() (map[string]interface{}, error) {
 	return nil, nil
@@ -370,5 +369,49 @@ func TestPluginWithPrefix(t *testing.T) {
 	expect := "/tmp/mackerel-plugin-testP"
 	if p.Tempfilename() != expect {
 		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
+	}
+}
+
+type testPHasDiff struct{}
+
+func (t testPHasDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1", Diff: true},
+			},
+		},
+	}
+}
+
+type testPHasntDiff struct{}
+
+func (t testPHasntDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasntDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1"},
+			},
+		},
+	}
+}
+
+func TestPluginHasDiff(t *testing.T) {
+	pHasDiff := NewMackerelPlugin(testPHasDiff{})
+	if !pHasDiff.hasDiff() {
+		t.Errorf("something went wrong")
+	}
+
+	pHasntDiff := NewMackerelPlugin(testPHasntDiff{})
+	if pHasntDiff.hasDiff() {
+		t.Errorf("something went wrong")
 	}
 }
