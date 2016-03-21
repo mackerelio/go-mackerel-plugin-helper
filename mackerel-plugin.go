@@ -312,10 +312,16 @@ type GraphDef struct {
 	Graphs map[string]Graphs `json:"graphs"`
 }
 
+func title(s string) string {
+	r := strings.NewReplacer(".", " ", "_", " ")
+	return strings.Title(r.Replace(s))
+}
+
 func (h *MackerelPlugin) OutputDefinitions() {
 	fmt.Println("# mackerel-agent-plugin")
 	graphs := make(map[string]Graphs)
 	for key, graph := range h.GraphDefinition() {
+		g := graph
 		k := key
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
 			prefix := p.GetMetricKeyPrefix()
@@ -325,7 +331,18 @@ func (h *MackerelPlugin) OutputDefinitions() {
 				k = prefix + "." + k
 			}
 		}
-		graphs[k] = graph
+		if g.Label == "" {
+			g.Label = title(k)
+		}
+		metrics := []Metrics{}
+		for _, v := range g.Metrics {
+			if v.Label == "" {
+				v.Label = title(v.Name)
+			}
+			metrics = append(metrics, v)
+		}
+		g.Metrics = metrics
+		graphs[k] = g
 	}
 	var graphdef GraphDef
 	graphdef.Graphs = graphs

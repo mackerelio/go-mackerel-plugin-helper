@@ -394,7 +394,7 @@ func ExamplePluginWithPrefixOutputDefinitions() {
 
 	// Output:
 	// # mackerel-agent-plugin
-	// {"graphs":{"testP":{"label":"","unit":"integer","metrics":[{"name":"bar","label":"","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"","unit":"float","metrics":[{"name":"baz","label":"","type":"","stacked":false,"scale":0}]}}}
+	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","type":"","stacked":false,"scale":0}]}}}
 }
 
 func ExamplePluginWithPrefixOutputValues() {
