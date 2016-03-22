@@ -264,7 +264,7 @@ func (h *MackerelPlugin) OutputValues() {
 
 	err = h.saveValues(stat, now)
 	if err != nil {
-		log.Fatalf("saveValues: ", err)
+		log.Fatalln("saveValues: ", err)
 	}
 }
 
