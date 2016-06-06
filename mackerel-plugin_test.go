@@ -396,3 +396,122 @@ func TestToFloat64(t *testing.T) {
 		t.Errorf("toFloat64(string) returns incorrect value: %v expected to be %v", ret, float64(100))
 	}
 }
+
+type testP struct{}
+
+func (t testP) FetchMetrics() (map[string]interface{}, error) {
+	ret := make(map[string]interface{})
+	ret["bar"] = 15.0
+	ret["baz"] = 18.0
+	return ret, nil
+}
+
+func (t testP) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"": Graphs{
+			Unit: "integer",
+			Metrics: [](Metrics){
+				Metrics{Name: "bar"},
+			},
+		},
+		"fuga": Graphs{
+			Unit: "float",
+			Metrics: [](Metrics){
+				Metrics{Name: "baz"},
+			},
+		},
+	}
+}
+
+func (t testP) GetMetricKeyPrefix() string {
+	return "testP"
+}
+
+func TestPluginWithPrefix(t *testing.T) {
+	p := NewMackerelPlugin(testP{})
+	expect := "/tmp/mackerel-plugin-testP"
+	if p.Tempfilename() != expect {
+		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
+	}
+}
+
+func ExamplePluginWithPrefixOutputDefinitions() {
+	helper := NewMackerelPlugin(testP{})
+	helper.OutputDefinitions()
+
+	// Output:
+	// # mackerel-agent-plugin
+	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","type":"","stacked":false,"scale":0}]}}}
+}
+
+func ExamplePluginWithPrefixOutputValues() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := ""
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.bar	15.000000	1437227240
+}
+
+func ExamplePluginWithPrefixOutputValues2() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := "fuga"
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.fuga.baz	18.000000	1437227240
+}
+
+type testPHasDiff struct{}
+
+func (t testPHasDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1", Diff: true},
+			},
+		},
+	}
+}
+
+type testPHasntDiff struct{}
+
+func (t testPHasntDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasntDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1"},
+			},
+		},
+	}
+}
+
+func TestPluginHasDiff(t *testing.T) {
+	pHasDiff := NewMackerelPlugin(testPHasDiff{})
+	if !pHasDiff.hasDiff() {
+		t.Errorf("something went wrong")
+	}
+
+	pHasntDiff := NewMackerelPlugin(testPHasntDiff{})
+	if pHasntDiff.hasDiff() {
+		t.Errorf("something went wrong")
+	}
+}
