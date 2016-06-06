@@ -18,9 +18,9 @@ type Metrics struct {
 	Name         string  `json:"name"`
 	Label        string  `json:"label"`
 	Diff         bool    `json:"-"`
-	Type         string  `json:"type"`
+	Type         string  `json:"-"`
 	Stacked      bool    `json:"stacked"`
-	Scale        float64 `json:"scale"`
+	Scale        float64 `json:"-"`
 	AbsoluteName bool    `json:"-"`
 }
 

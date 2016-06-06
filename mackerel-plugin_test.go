@@ -340,7 +340,7 @@ func ExampleOutputDefinitions() {
 
 	// Output:
 	// # mackerel-agent-plugin
-	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","type":"uint64","stacked":false,"scale":0}]}}}
+	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","stacked":false}]}}}
 }
 
 func TestToUint32(t *testing.T) {
@@ -441,7 +441,7 @@ func ExamplePluginWithPrefixOutputDefinitions() {
 
 	// Output:
 	// # mackerel-agent-plugin
-	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","type":"","stacked":false,"scale":0}]}}}
+	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","stacked":false}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","stacked":false}]}}}
 }
 
 func ExamplePluginWithPrefixOutputValues() {
