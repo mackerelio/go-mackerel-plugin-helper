@@ -15,13 +15,13 @@ import (
 )
 
 type Metrics struct {
-	Name       string  `json:"name"`
-	Label      string  `json:"label"`
-	Diff       bool    `json:"-"`
-	Type       string  `json:"type"`
-	Stacked    bool    `json:"stacked"`
-	Scale      float64 `json:"scale"`
-	NeedPrefix bool    `json:"-"`
+	Name         string  `json:"name"`
+	Label        string  `json:"label"`
+	Diff         bool    `json:"-"`
+	Type         string  `json:"type"`
+	Stacked      bool    `json:"stacked"`
+	Scale        float64 `json:"scale"`
+	AbsoluteName bool    `json:"-"`
 }
 
 type Graphs struct {
@@ -153,7 +153,7 @@ func (h *MackerelPlugin) Tempfilename() string {
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
 	name := metric.Name
-	if metric.NeedPrefix && len(prefix) > 0 {
+	if metric.AbsoluteName && len(prefix) > 0 {
 		name = prefix + "." + name
 	}
 	value, ok := (*stat)[name]
