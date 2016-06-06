@@ -155,6 +155,38 @@ func ExampleFormatValues() {
 	// foo.cmd_get	500.000000	1437227240
 }
 
+func ExampleFormatValuesAbsoluteName() {
+	var mp MackerelPlugin
+	prefixA := "foo"
+	metricA := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
+	prefixB := "bar"
+	metricB := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
+	stat := map[string]interface{}{"foo.cmd_get": uint64(1000), "bar.cmd_get": uint64(1234)}
+	lastStat := map[string]interface{}{"foo.cmd_get": uint64(500), ".last_diff.foo.cmd_get": 300.0, "bar.cmd_get": uint64(600), ".last_diff.bar.cmd_get": 400.0}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValues(prefixA, metricA, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefixB, metricB, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// foo.cmd_get	500.000000	1437227240
+	// bar.cmd_get	634.000000	1437227240
+}
+
+func ExampleFormatValuesAbsoluteNameButNoPrefix() {
+	var mp MackerelPlugin
+	prefix := ""
+	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
+	stat := map[string]interface{}{"cmd_get": uint64(1000)}
+	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// cmd_get	500.000000	1437227240
+}
+
 func ExampleFormatValuesWithCounterReset() {
 	var mp MackerelPlugin
 	prefix := "foo"
@@ -225,6 +257,21 @@ func ExampleFormatValuesWithWildcard() {
 	var mp MackerelPlugin
 	prefix := "foo.#"
 	metric := Metrics{Name: "bar", Label: "Get", Diff: true, Type: "uint64"}
+	stat := map[string]interface{}{"foo.1.bar": uint64(1000), "foo.2.bar": uint64(2000)}
+	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
+	now := time.Unix(1437227240, 0)
+	lastTime := now.Add(-time.Duration(60) * time.Second)
+	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// foo.1.bar	500.000000	1437227240
+}
+
+func ExampleFormatValuesWithWildcardAndAbsoluteName() {
+	// AbsoluteName should be ignored with WildCard
+	var mp MackerelPlugin
+	prefix := "foo.#"
+	metric := Metrics{Name: "bar", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
 	stat := map[string]interface{}{"foo.1.bar": uint64(1000), "foo.2.bar": uint64(2000)}
 	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
 	now := time.Unix(1437227240, 0)
@@ -347,5 +394,124 @@ func TestToFloat64(t *testing.T) {
 
 	if ret := toFloat64("100"); ret != float64(100) {
 		t.Errorf("toFloat64(string) returns incorrect value: %v expected to be %v", ret, float64(100))
+	}
+}
+
+type testP struct{}
+
+func (t testP) FetchMetrics() (map[string]interface{}, error) {
+	ret := make(map[string]interface{})
+	ret["bar"] = 15.0
+	ret["baz"] = 18.0
+	return ret, nil
+}
+
+func (t testP) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"": Graphs{
+			Unit: "integer",
+			Metrics: [](Metrics){
+				Metrics{Name: "bar"},
+			},
+		},
+		"fuga": Graphs{
+			Unit: "float",
+			Metrics: [](Metrics){
+				Metrics{Name: "baz"},
+			},
+		},
+	}
+}
+
+func (t testP) GetMetricKeyPrefix() string {
+	return "testP"
+}
+
+func TestPluginWithPrefix(t *testing.T) {
+	p := NewMackerelPlugin(testP{})
+	expect := "/tmp/mackerel-plugin-testP"
+	if p.Tempfilename() != expect {
+		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
+	}
+}
+
+func ExamplePluginWithPrefixOutputDefinitions() {
+	helper := NewMackerelPlugin(testP{})
+	helper.OutputDefinitions()
+
+	// Output:
+	// # mackerel-agent-plugin
+	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","type":"","stacked":false,"scale":0}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","type":"","stacked":false,"scale":0}]}}}
+}
+
+func ExamplePluginWithPrefixOutputValues() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := ""
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.bar	15.000000	1437227240
+}
+
+func ExamplePluginWithPrefixOutputValues2() {
+	helper := NewMackerelPlugin(testP{})
+	stat, _ := helper.FetchMetrics()
+	key := "fuga"
+	metric := helper.GraphDefinition()[key].Metrics[0]
+	var lastStat map[string]interface{} = nil
+	now := time.Unix(1437227240, 0)
+	lastTime := time.Unix(0, 0)
+	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+
+	// Output:
+	// testP.fuga.baz	18.000000	1437227240
+}
+
+type testPHasDiff struct{}
+
+func (t testPHasDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1", Diff: true},
+			},
+		},
+	}
+}
+
+type testPHasntDiff struct{}
+
+func (t testPHasntDiff) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (t testPHasntDiff) GraphDefinition() map[string]Graphs {
+	return map[string](Graphs){
+		"hoge": Graphs{
+			Metrics: [](Metrics){
+				Metrics{Name: "hoge1", Label: "hoge1"},
+			},
+		},
+	}
+}
+
+func TestPluginHasDiff(t *testing.T) {
+	pHasDiff := NewMackerelPlugin(testPHasDiff{})
+	if !pHasDiff.hasDiff() {
+		t.Errorf("something went wrong")
+	}
+
+	pHasntDiff := NewMackerelPlugin(testPHasntDiff{})
+	if pHasntDiff.hasDiff() {
+		t.Errorf("something went wrong")
 	}
 }
