@@ -81,9 +81,10 @@ If the differential value is ten-times above last value, the helper judge this i
 A plugin must implement this interface and the `main` method.
 
 ```go
-type Plugin interface {
+type PluginWithPrefix interface {
 	FetchMetrics() (map[string]interface{}, error)
 	GraphDefinition() map[string]Graphs
+	GetMetricKeyPrefix() string
 }
 ```
 
@@ -92,19 +93,20 @@ func main() {
 	optHost := flag.String("host", "localhost", "Hostname")
 	optPort := flag.String("port", "11211", "Port")
 	optTempfile := flag.String("tempfile", "", "Temp file name")
+    optMetricKeyPrefix := flag.String("metric-key-prefix", "memcached", "Metric Key Prefix")
 	flag.Parse()
 
 	var memcached MemcachedPlugin
 
 	memcached.Target = fmt.Sprintf("%s:%s", *optHost, *optPort)
+    memcached.prefix = *optMetricKeyPrefix
 	helper := mackerelplugin.NewMackerelPlugin(memcached)
-
-	if *optTempfile != "" {
-		helper.Tempfile = *optTempfile
-	} else {
-		helper.Tempfile = fmt.Sprintf("/tmp/mackerel-plugin-memcached-%s-%s", *optHost, *optPort)
-	}
+	helper.Tempfile = *optTempfile
 
 	helper.Run()
 }
 ```
+
+### old `Plugin` interface
+
+`Plugin` interface is old one. `PluginWithPrefix` interface is recommended now.
