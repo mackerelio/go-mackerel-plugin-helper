@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -188,7 +189,8 @@ func (h *MackerelPlugin) tempfilename() string {
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
 			prefix = p.GetMetricKeyPrefix()
 		}
-		h.Tempfile = fmt.Sprintf("/tmp/mackerel-plugin-%s", prefix)
+		filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
+		h.Tempfile = filepath.Join(os.TempDir(), filename)
 	}
 	return h.Tempfile
 }

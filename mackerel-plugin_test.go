@@ -3,6 +3,8 @@ package mackerelplugin
 import (
 	"bytes"
 	"math"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -429,7 +431,7 @@ func (t testP) GetMetricKeyPrefix() string {
 
 func TestPluginWithPrefix(t *testing.T) {
 	p := NewMackerelPlugin(testP{})
-	expect := "/tmp/mackerel-plugin-testP"
+	expect := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
 	if p.tempfilename() != expect {
 		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
 	}
