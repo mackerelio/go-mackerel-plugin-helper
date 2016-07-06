@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// Metrics represents definition of a metric
 type Metrics struct {
 	Name         string  `json:"name"`
 	Label        string  `json:"label"`
@@ -24,28 +25,33 @@ type Metrics struct {
 	AbsoluteName bool    `json:"-"`
 }
 
+// Graphs represents definition of a graph
 type Graphs struct {
 	Label   string    `json:"label"`
 	Unit    string    `json:"unit"`
 	Metrics []Metrics `json:"metrics"`
 }
 
+// Plugin is old interface of mackerel-plugin
 type Plugin interface {
 	FetchMetrics() (map[string]interface{}, error)
 	GraphDefinition() map[string]Graphs
 }
 
+// PluginWithPrefix is recommended interface
 type PluginWithPrefix interface {
 	Plugin
 	GetMetricKeyPrefix() string
 }
 
+// MackerelPlugin is for mackerel-agent-plugin
 type MackerelPlugin struct {
 	Plugin
 	Tempfile string
 	diff     *bool
 }
 
+// NewMackerelPlugin returns new MackerelPlugin struct
 func NewMackerelPlugin(plugin Plugin) MackerelPlugin {
 	mp := MackerelPlugin{Plugin: plugin}
 	return mp
@@ -89,7 +95,7 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 	}
 	lastTime := time.Now()
 
-	f, err := os.Open(h.Tempfilename())
+	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, lastTime, nil
@@ -117,7 +123,7 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	if !h.hasDiff() {
 		return nil
 	}
-	f, err := os.Create(h.Tempfilename())
+	f, err := os.Create(h.tempfilename())
 	if err != nil {
 		return err
 	}
@@ -176,7 +182,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	return 0.0, errors.New("Counter seems to be reset.")
 }
 
-func (h *MackerelPlugin) Tempfilename() string {
+func (h *MackerelPlugin) tempfilename() string {
 	if h.Tempfile == "" {
 		prefix := "default"
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
@@ -228,9 +234,8 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 			if err != nil {
 				log.Println("OutputValues: ", err)
 				return
-			} else {
-				(*stat)[".last_diff."+name] = value
 			}
+			(*stat)[".last_diff."+name] = value
 		} else {
 			log.Printf("%s does not exist at last fetch\n", name)
 			return
@@ -268,7 +273,7 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
 	}
-	for k, _ := range *stat {
+	for k := range *stat {
 		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
@@ -277,6 +282,7 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	}
 }
 
+// Run the plugin
 func (h *MackerelPlugin) Run() {
 	if os.Getenv("MACKEREL_AGENT_PLUGIN_META") != "" {
 		h.OutputDefinitions()
@@ -285,6 +291,7 @@ func (h *MackerelPlugin) Run() {
 	}
 }
 
+// OutputValues output the metrics
 func (h *MackerelPlugin) OutputValues() {
 	now := time.Now()
 	stat, err := h.FetchMetrics()
@@ -313,6 +320,7 @@ func (h *MackerelPlugin) OutputValues() {
 	}
 }
 
+// GraphDef represents graph definitions
 type GraphDef struct {
 	Graphs map[string]Graphs `json:"graphs"`
 }
@@ -322,6 +330,7 @@ func title(s string) string {
 	return strings.Title(r.Replace(s))
 }
 
+// OutputDefinitions outputs graph definitions
 func (h *MackerelPlugin) OutputDefinitions() {
 	fmt.Println("# mackerel-agent-plugin")
 	graphs := make(map[string]Graphs)

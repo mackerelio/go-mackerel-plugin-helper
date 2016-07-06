@@ -314,7 +314,7 @@ func ExampleFormatValuesWithWildcardAstarisk() {
 type MemcachedPlugin struct {
 }
 
-var graphdef map[string](Graphs) = map[string](Graphs){
+var graphdef = map[string](Graphs){
 	"memcached.cmd": Graphs{
 		Label: "Memcached Command",
 		Unit:  "integer",
@@ -430,8 +430,8 @@ func (t testP) GetMetricKeyPrefix() string {
 func TestPluginWithPrefix(t *testing.T) {
 	p := NewMackerelPlugin(testP{})
 	expect := "/tmp/mackerel-plugin-testP"
-	if p.Tempfilename() != expect {
-		t.Errorf("p.Tempfilename() should be %s, but: %s", expect, p.Tempfilename())
+	if p.tempfilename() != expect {
+		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
 	}
 }
 
@@ -449,7 +449,7 @@ func ExamplePluginWithPrefixOutputValues() {
 	stat, _ := helper.FetchMetrics()
 	key := ""
 	metric := helper.GraphDefinition()[key].Metrics[0]
-	var lastStat map[string]interface{} = nil
+	var lastStat map[string]interface{}
 	now := time.Unix(1437227240, 0)
 	lastTime := time.Unix(0, 0)
 	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
@@ -463,7 +463,7 @@ func ExamplePluginWithPrefixOutputValues2() {
 	stat, _ := helper.FetchMetrics()
 	key := "fuga"
 	metric := helper.GraphDefinition()[key].Metrics[0]
-	var lastStat map[string]interface{} = nil
+	var lastStat map[string]interface{}
 	now := time.Unix(1437227240, 0)
 	lastTime := time.Unix(0, 0)
 	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
