@@ -84,7 +84,7 @@ A plugin must implement this interface and the `main` method.
 type PluginWithPrefix interface {
 	FetchMetrics() (map[string]interface{}, error)
 	GraphDefinition() map[string]Graphs
-	GetMetricKeyPrefix() string
+	MetricKeyPrefix() string
 }
 ```
 
