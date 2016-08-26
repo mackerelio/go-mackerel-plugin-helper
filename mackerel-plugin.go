@@ -190,7 +190,11 @@ func (h *MackerelPlugin) tempfilename() string {
 			prefix = p.MetricKeyPrefix()
 		}
 		filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-		h.Tempfile = filepath.Join(os.TempDir(), filename)
+		dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+		if dir == "" {
+			dir = os.TempDir()
+		}
+		h.Tempfile = filepath.Join(dir, filename)
 	}
 	return h.Tempfile
 }
