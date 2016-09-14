@@ -125,10 +125,6 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 		return nil
 	}
 	fname := h.tempfilename()
-	err := os.MkdirAll(filepath.Dir(fname), 0777)
-	if err != nil {
-		return err
-	}
 	f, err := os.Create(fname)
 	if err != nil {
 		return err
