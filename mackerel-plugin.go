@@ -124,7 +124,8 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	if !h.hasDiff() {
 		return nil
 	}
-	f, err := os.Create(h.tempfilename())
+	fname := h.tempfilename()
+	f, err := os.Create(fname)
 	if err != nil {
 		return err
 	}
@@ -190,7 +191,11 @@ func (h *MackerelPlugin) tempfilename() string {
 			prefix = p.MetricKeyPrefix()
 		}
 		filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-		h.Tempfile = filepath.Join(os.TempDir(), filename)
+		dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+		if dir == "" {
+			dir = os.TempDir()
+		}
+		h.Tempfile = filepath.Join(dir, filename)
 	}
 	return h.Tempfile
 }
