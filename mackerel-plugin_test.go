@@ -437,6 +437,14 @@ func TestPluginWithPrefix(t *testing.T) {
 	}
 }
 
+func TestDefaultTempfile(t *testing.T) {
+	var p MackerelPlugin
+	expect := filepath.Join(os.TempDir(), "mackerel-plugin-default")
+	if p.tempfilename() != expect {
+		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
+	}
+}
+
 func ExamplePluginWithPrefixOutputDefinitions() {
 	helper := NewMackerelPlugin(testP{})
 	helper.OutputDefinitions()
