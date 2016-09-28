@@ -2,6 +2,7 @@ package mackerelplugin
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -439,7 +440,8 @@ func TestPluginWithPrefix(t *testing.T) {
 
 func TestDefaultTempfile(t *testing.T) {
 	var p MackerelPlugin
-	expect := filepath.Join(os.TempDir(), "mackerel-plugin-default")
+	filename := filepath.Base(os.Args[0])
+	expect := filepath.Join(os.TempDir(), fmt.Sprintf("mackerel-plugin-%s", filename))
 	if p.tempfilename() != expect {
 		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
 	}

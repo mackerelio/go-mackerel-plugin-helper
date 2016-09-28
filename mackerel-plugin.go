@@ -186,7 +186,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 
 func (h *MackerelPlugin) tempfilename() string {
 	if h.Tempfile == "" {
-		prefix := "default"
+		prefix := filepath.Base(os.Args[0])
 		if p, ok := h.Plugin.(PluginWithPrefix); ok {
 			prefix = p.MetricKeyPrefix()
 		}
