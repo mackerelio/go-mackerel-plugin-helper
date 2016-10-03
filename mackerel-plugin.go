@@ -96,7 +96,7 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 	}
 	lastTime := time.Now()
 
-	f, err := os.Open(h.tempfilename())
+	f, err := os.Open(h.tempfilePath())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, lastTime, nil
@@ -124,7 +124,7 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	if !h.hasDiff() {
 		return nil
 	}
-	fname := h.tempfilename()
+	fname := h.tempfilePath()
 	f, err := os.Create(fname)
 	if err != nil {
 		return err
@@ -184,20 +184,26 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	return 0.0, errors.New("Counter seems to be reset.")
 }
 
-func (h *MackerelPlugin) tempfilename() string {
+func (h *MackerelPlugin) tempfilePath() string {
 	if h.Tempfile == "" {
-		prefix := filepath.Base(os.Args[0])
-		if p, ok := h.Plugin.(PluginWithPrefix); ok {
-			prefix = p.MetricKeyPrefix()
-		}
-		filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-		dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
-		if dir == "" {
-			dir = os.TempDir()
-		}
-		h.Tempfile = filepath.Join(dir, filename)
+		h.Tempfile = h.generateTempfilePath(os.Args[0])
 	}
 	return h.Tempfile
+}
+
+func (h *MackerelPlugin) generateTempfilePath(path string) string {
+	var prefix string
+	if p, ok := h.Plugin.(PluginWithPrefix); ok {
+		prefix = p.MetricKeyPrefix()
+	} else {
+		prefix = filepath.Base(path)
+	}
+	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
+	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+	if dir == "" {
+		dir = os.TempDir()
+	}
+	return filepath.Join(dir, filename)
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {

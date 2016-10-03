@@ -430,20 +430,38 @@ func (t testP) MetricKeyPrefix() string {
 	return "testP"
 }
 
-func TestPluginWithPrefix(t *testing.T) {
-	p := NewMackerelPlugin(testP{})
-	expect := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
-	if p.tempfilename() != expect {
-		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
-	}
-}
-
 func TestDefaultTempfile(t *testing.T) {
 	var p MackerelPlugin
 	filename := filepath.Base(os.Args[0])
 	expect := filepath.Join(os.TempDir(), fmt.Sprintf("mackerel-plugin-%s", filename))
-	if p.tempfilename() != expect {
-		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
+	if p.tempfilePath() != expect {
+		t.Errorf("p.tempfilePath() should be %s, but: %s", expect, p.tempfilePath())
+	}
+
+	pPrefix := NewMackerelPlugin(testP{})
+	expectForPrefix := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
+	if pPrefix.tempfilePath() != expectForPrefix {
+		t.Errorf("pPrefix.tempfilePath() should be %s, but: %s", expectForPrefix, pPrefix.tempfilePath())
+	}
+}
+
+func TestTempfilenameFromExecutableFilePath(t *testing.T) {
+	var p MackerelPlugin
+
+	wd, _ := os.Getwd()
+	// not PluginWithPrefix, regular filename
+	expect1 := filepath.Join(os.TempDir(), "mackerel-plugin-foobar")
+	filename1 := p.generateTempfilePath(filepath.Join(wd, "foobar"))
+	if filename1 != expect1 {
+		t.Errorf("p.generateTempfilePath() should be %s, but: %s", expect1, filename1)
+	}
+
+	// PluginWithPrefix ignores current filename
+	pPrefix := NewMackerelPlugin(testP{})
+	expectForPrefix := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
+	filenameForPrefix := pPrefix.generateTempfilePath(filepath.Join(wd, "foo"))
+	if filenameForPrefix != expectForPrefix {
+		t.Errorf("pPrefix.generateTempfilePath() should be %s, but: %s", expectForPrefix, filenameForPrefix)
 	}
 }
 
