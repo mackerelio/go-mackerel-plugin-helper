@@ -463,6 +463,13 @@ func TestTempfilenameFromExecutableFilePath(t *testing.T) {
 		t.Errorf("p.generateTempfilePath() should be %s, but: %s", expect2, filename2)
 	}
 
+	// not PluginWithPrefix, begins with "mackerel-plugin-"
+	expect3 := filepath.Join(os.TempDir(), "mackerel-plugin-trimmed")
+	filename3 := p.generateTempfilePath(filepath.Join(wd, "mackerel-plugin-trimmed"))
+	if filename3 != expect3 {
+		t.Errorf("p.generateTempfilePath() should be %s, but: %s", expect3, filename3)
+	}
+
 	// PluginWithPrefix ignores current filename
 	pPrefix := NewMackerelPlugin(testP{})
 	expectForPrefix := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
