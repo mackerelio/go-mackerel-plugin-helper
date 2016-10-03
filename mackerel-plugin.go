@@ -196,7 +196,9 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	if p, ok := h.Plugin.(PluginWithPrefix); ok {
 		prefix = p.MetricKeyPrefix()
 	} else {
-		prefix = filepath.Base(path)
+		name := filepath.Base(path)
+		var sanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
+		prefix = sanitizeReg.ReplaceAllString(name, "_")
 	}
 	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
 	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
