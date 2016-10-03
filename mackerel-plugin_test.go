@@ -434,14 +434,14 @@ func TestDefaultTempfile(t *testing.T) {
 	var p MackerelPlugin
 	filename := filepath.Base(os.Args[0])
 	expect := filepath.Join(os.TempDir(), fmt.Sprintf("mackerel-plugin-%s", filename))
-	if p.tempfilePath() != expect {
-		t.Errorf("p.tempfilePath() should be %s, but: %s", expect, p.tempfilePath())
+	if p.tempfilename() != expect {
+		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
 	}
 
 	pPrefix := NewMackerelPlugin(testP{})
 	expectForPrefix := filepath.Join(os.TempDir(), "mackerel-plugin-testP")
-	if pPrefix.tempfilePath() != expectForPrefix {
-		t.Errorf("pPrefix.tempfilePath() should be %s, but: %s", expectForPrefix, pPrefix.tempfilePath())
+	if pPrefix.tempfilename() != expectForPrefix {
+		t.Errorf("pPrefix.tempfilename() should be %s, but: %s", expectForPrefix, pPrefix.tempfilename())
 	}
 }
 

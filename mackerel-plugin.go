@@ -96,7 +96,7 @@ func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, e
 	}
 	lastTime := time.Now()
 
-	f, err := os.Open(h.tempfilePath())
+	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, lastTime, nil
@@ -124,7 +124,7 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	if !h.hasDiff() {
 		return nil
 	}
-	fname := h.tempfilePath()
+	fname := h.tempfilename()
 	f, err := os.Create(fname)
 	if err != nil {
 		return err
@@ -184,7 +184,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	return 0.0, errors.New("Counter seems to be reset.")
 }
 
-func (h *MackerelPlugin) tempfilePath() string {
+func (h *MackerelPlugin) tempfilename() string {
 	if h.Tempfile == "" {
 		h.Tempfile = h.generateTempfilePath(os.Args[0])
 	}
