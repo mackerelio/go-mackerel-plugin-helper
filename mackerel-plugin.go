@@ -186,18 +186,27 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 
 func (h *MackerelPlugin) tempfilename() string {
 	if h.Tempfile == "" {
-		prefix := "default"
-		if p, ok := h.Plugin.(PluginWithPrefix); ok {
-			prefix = p.MetricKeyPrefix()
-		}
-		filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-		dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
-		if dir == "" {
-			dir = os.TempDir()
-		}
-		h.Tempfile = filepath.Join(dir, filename)
+		h.Tempfile = h.generateTempfilePath(os.Args[0])
 	}
 	return h.Tempfile
+}
+
+var tempfileSanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
+
+func (h *MackerelPlugin) generateTempfilePath(path string) string {
+	var prefix string
+	if p, ok := h.Plugin.(PluginWithPrefix); ok {
+		prefix = p.MetricKeyPrefix()
+	} else {
+		name := filepath.Base(path)
+		prefix = strings.TrimPrefix(tempfileSanitizeReg.ReplaceAllString(name, "_"), "mackerel-plugin-")
+	}
+	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
+	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+	if dir == "" {
+		dir = os.TempDir()
+	}
+	return filepath.Join(dir, filename)
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
