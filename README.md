@@ -3,7 +3,6 @@ go-mackerel-plugin-helper [![Build Status](https://travis-ci.org/mackerelio/go-m
 
 This package provides helper methods to create mackerel agent plugin easily.
 
-
 How to use
 ==========
 
@@ -27,16 +26,16 @@ A plugin can specify `Graphs` and `Metrics`.
 - `Stacked`: If `Stacked` is true, the line is stacked.
 - `Scale`: Each value is multiplied by `Scale`.
 
-```golang
-var graphdef map[string](Graphs) = map[string](Graphs){
-	"memcached.cmd": Graphs{
+```go
+var graphdef = map[string](mackerelplugin.Graphs){
+	"memcached.cmd": {
 		Label: "Memcached Command",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_set", Label: "Set", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_flush", Label: "Flush", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_touch", Label: "Touch", Diff: true, Type: "uint64"},
+		Metrics: [](mackerelplugin.Metrics){
+			{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
+			{Name: "cmd_set", Label: "Set", Diff: true, Type: "uint64"},
+			{Name: "cmd_flush", Label: "Flush", Diff: true, Type: "uint64"},
+			{Name: "cmd_touch", Label: "Touch", Diff: true, Type: "uint64"},
 		},
 	},
 }
@@ -57,15 +56,15 @@ For example, `OGC` value are provided KB scale.
 
 `Scale` of `Metrics` is a multiplier for adjustment of the scale values.
 
-```golang
-var graphdef map[string](Graphs) = map[string](Graphs){
-    "jvm.old_space": mp.Graphs{
+```go
+var graphdef = map[string](mackerelplugin.Graphs){
+    "jvm.old_space": {
         Label: "JVM Old Space memory",
         Unit:  "float",
-        Metrics: [](mp.Metrics){
-            mp.Metrics{Name: "OGCMX", Label: "Old max", Diff: false, Scale: 1024},
-            mp.Metrics{Name: "OGC", Label: "Old current", Diff: false, Scale: 1024},
-            mp.Metrics{Name: "OU", Label: "Old used", Diff: false, Scale: 1024},
+        Metrics: [](mackerelplugin.Metrics){
+            {Name: "OGCMX", Label: "Old max", Diff: false, Scale: 1024},
+            {Name: "OGC", Label: "Old current", Diff: false, Scale: 1024},
+            {Name: "OU", Label: "Old used", Diff: false, Scale: 1024},
         },
     },
 }
@@ -80,31 +79,34 @@ If the differential value is ten-times above last value, the helper judge this i
 ## Method
 
 A plugin must implement this interface and the `main` method.
-```
-type Plugin interface {
+
+```go
+type PluginWithPrefix interface {
 	FetchMetrics() (map[string]interface{}, error)
 	GraphDefinition() map[string]Graphs
+	MetricKeyPrefix() string
 }
 ```
 
-```
+```go
 func main() {
 	optHost := flag.String("host", "localhost", "Hostname")
 	optPort := flag.String("port", "11211", "Port")
 	optTempfile := flag.String("tempfile", "", "Temp file name")
+    optMetricKeyPrefix := flag.String("metric-key-prefix", "memcached", "Metric Key Prefix")
 	flag.Parse()
 
 	var memcached MemcachedPlugin
 
 	memcached.Target = fmt.Sprintf("%s:%s", *optHost, *optPort)
-	helper := mp.NewMackerelPlugin(memcached)
-
-	if *optTempfile != "" {
-		helper.Tempfile = *optTempfile
-	} else {
-		helper.Tempfile = fmt.Sprintf("/tmp/mackerel-plugin-memcached-%s-%s", *optHost, *optPort)
-	}
+    memcached.prefix = *optMetricKeyPrefix
+	helper := mackerelplugin.NewMackerelPlugin(memcached)
+	helper.Tempfile = *optTempfile
 
 	helper.Run()
 }
 ```
+
+### old `Plugin` interface
+
+`Plugin` interface is old one. `PluginWithPrefix` interface is recommended now.
