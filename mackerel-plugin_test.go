@@ -479,6 +479,19 @@ func TestTempfilenameFromExecutableFilePath(t *testing.T) {
 	}
 }
 
+func TestTempfilename(t *testing.T) {
+	orig := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+	workdir := "/var/tmp/hoge"
+	os.Setenv("MACKEREL_PLUGIN_WORKDIR", workdir)
+	defer os.Setenv("MACKEREL_PLUGIN_WORKDIR", orig)
+
+	p := NewMackerelPlugin(testP{})
+	expect := filepath.Join(workdir, "mackerel-plugin-testP")
+	if p.tempfilename() != expect {
+		t.Errorf("p.tempfilename() should be %s, but: %s", expect, p.tempfilename())
+	}
+}
+
 func ExamplePluginWithPrefixOutputDefinitions() {
 	helper := NewMackerelPlugin(testP{})
 	helper.OutputDefinitions()
