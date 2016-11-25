@@ -8,3 +8,5 @@ lint: deps
 
 test:
 	go test -v
+
+.PHONY: deps lint test
