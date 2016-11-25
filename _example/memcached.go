@@ -13,69 +13,69 @@ import (
 )
 
 // https://github.com/memcached/memcached/blob/master/doc/protocol.txt
-var graphdef map[string](mp.Graphs) = map[string](mp.Graphs){
-	"memcached.connections": mp.Graphs{
+var graphdef map[string]mp.Graphs = map[string]mp.Graphs{
+	"memcached.connections": {
 		Label: "Memcached Connections",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "curr_connections", Label: "Connections", Diff: false},
+		Metrics: []mp.Metrics{
+			{Name: "curr_connections", Label: "Connections", Diff: false},
 		},
 	},
-	"memcached.cmd": mp.Graphs{
+	"memcached.cmd": {
 		Label: "Memcached Command",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_set", Label: "Set", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_flush", Label: "Flush", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cmd_touch", Label: "Touch", Diff: true, Type: "uint64"},
+		Metrics: []mp.Metrics{
+			{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
+			{Name: "cmd_set", Label: "Set", Diff: true, Type: "uint64"},
+			{Name: "cmd_flush", Label: "Flush", Diff: true, Type: "uint64"},
+			{Name: "cmd_touch", Label: "Touch", Diff: true, Type: "uint64"},
 		},
 	},
-	"memcached.hitmiss": mp.Graphs{
+	"memcached.hitmiss": {
 		Label: "Memcached Hits/Misses",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "get_hits", Label: "Get Hits", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "get_misses", Label: "Get Misses", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "delete_hits", Label: "Delete Hits", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "delete_misses", Label: "Delete Misses", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "incr_hits", Label: "Incr Hits", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "incr_misses", Label: "Incr Misses", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cas_hits", Label: "Cas Hits", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "cas_misses", Label: "Cas Misses", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "touch_hits", Label: "Touch Hits", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "touch_misses", Label: "Touch Misses", Diff: true, Type: "uint64"},
+		Metrics: []mp.Metrics{
+			{Name: "get_hits", Label: "Get Hits", Diff: true, Type: "uint64"},
+			{Name: "get_misses", Label: "Get Misses", Diff: true, Type: "uint64"},
+			{Name: "delete_hits", Label: "Delete Hits", Diff: true, Type: "uint64"},
+			{Name: "delete_misses", Label: "Delete Misses", Diff: true, Type: "uint64"},
+			{Name: "incr_hits", Label: "Incr Hits", Diff: true, Type: "uint64"},
+			{Name: "incr_misses", Label: "Incr Misses", Diff: true, Type: "uint64"},
+			{Name: "cas_hits", Label: "Cas Hits", Diff: true, Type: "uint64"},
+			{Name: "cas_misses", Label: "Cas Misses", Diff: true, Type: "uint64"},
+			{Name: "touch_hits", Label: "Touch Hits", Diff: true, Type: "uint64"},
+			{Name: "touch_misses", Label: "Touch Misses", Diff: true, Type: "uint64"},
 		},
 	},
-	"memcached.evictions": mp.Graphs{
+	"memcached.evictions": {
 		Label: "Memcached Evictions",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "evictions", Label: "Evictions", Diff: true, Type: "uint64"},
+		Metrics: []mp.Metrics{
+			{Name: "evictions", Label: "Evictions", Diff: true, Type: "uint64"},
 		},
 	},
-	"memcached.unfetched": mp.Graphs{
+	"memcached.unfetched": {
 		Label: "Memcached Unfetched",
 		Unit:  "integer",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "expired_unfetched", Label: "Expired unfetched", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "evicted_unfetched", Label: "Evicted unfetched", Diff: true, Type: "uint64"},
+		Metrics: []mp.Metrics{
+			{Name: "expired_unfetched", Label: "Expired unfetched", Diff: true, Type: "uint64"},
+			{Name: "evicted_unfetched", Label: "Evicted unfetched", Diff: true, Type: "uint64"},
 		},
 	},
-	"memcached.rusage": mp.Graphs{
+	"memcached.rusage": {
 		Label: "Memcached Resouce Usage",
 		Unit:  "float",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "rusage_user", Label: "User", Diff: true},
-			mp.Metrics{Name: "rusage_system", Label: "System", Diff: true},
+		Metrics: []mp.Metrics{
+			{Name: "rusage_user", Label: "User", Diff: true},
+			{Name: "rusage_system", Label: "System", Diff: true},
 		},
 	},
-	"memcached.bytes": mp.Graphs{
+	"memcached.bytes": {
 		Label: "Memcached Traffics",
 		Unit:  "bytes",
-		Metrics: [](mp.Metrics){
-			mp.Metrics{Name: "bytes_read", Label: "Read", Diff: true, Type: "uint64"},
-			mp.Metrics{Name: "bytes_written", Label: "Write", Diff: true, Type: "uint64"},
+		Metrics: []mp.Metrics{
+			{Name: "bytes_read", Label: "Read", Diff: true, Type: "uint64"},
+			{Name: "bytes_written", Label: "Write", Diff: true, Type: "uint64"},
 		},
 	},
 }
@@ -116,7 +116,7 @@ func (m MemcachedPlugin) ParseStats(conn io.Reader) (map[string]interface{}, err
 	return nil, nil
 }
 
-func (m MemcachedPlugin) GraphDefinition() map[string](mp.Graphs) {
+func (m MemcachedPlugin) GraphDefinition() map[string]mp.Graphs {
 	return graphdef
 }
 

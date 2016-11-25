@@ -317,17 +317,17 @@ func ExampleFormatValuesWithWildcardAstarisk() {
 type MemcachedPlugin struct {
 }
 
-var graphdef = map[string](Graphs){
-	"memcached.cmd": Graphs{
+var graphdef = map[string]Graphs{
+	"memcached.cmd": {
 		Label: "Memcached Command",
 		Unit:  "integer",
-		Metrics: [](Metrics){
-			Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
+		Metrics: []Metrics{
+			{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"},
 		},
 	},
 }
 
-func (m MemcachedPlugin) GraphDefinition() map[string](Graphs) {
+func (m MemcachedPlugin) GraphDefinition() map[string]Graphs {
 	return graphdef
 }
 
@@ -410,17 +410,17 @@ func (t testP) FetchMetrics() (map[string]interface{}, error) {
 }
 
 func (t testP) GraphDefinition() map[string]Graphs {
-	return map[string](Graphs){
-		"": Graphs{
+	return map[string]Graphs{
+		"": {
 			Unit: "integer",
-			Metrics: [](Metrics){
-				Metrics{Name: "bar"},
+			Metrics: []Metrics{
+				{Name: "bar"},
 			},
 		},
-		"fuga": Graphs{
+		"fuga": {
 			Unit: "float",
-			Metrics: [](Metrics){
-				Metrics{Name: "baz"},
+			Metrics: []Metrics{
+				{Name: "baz"},
 			},
 		},
 	}
@@ -523,10 +523,10 @@ func (t testPHasDiff) FetchMetrics() (map[string]interface{}, error) {
 }
 
 func (t testPHasDiff) GraphDefinition() map[string]Graphs {
-	return map[string](Graphs){
-		"hoge": Graphs{
-			Metrics: [](Metrics){
-				Metrics{Name: "hoge1", Label: "hoge1", Diff: true},
+	return map[string]Graphs{
+		"hoge": {
+			Metrics: []Metrics{
+				{Name: "hoge1", Label: "hoge1", Diff: true},
 			},
 		},
 	}
@@ -539,10 +539,10 @@ func (t testPHasntDiff) FetchMetrics() (map[string]interface{}, error) {
 }
 
 func (t testPHasntDiff) GraphDefinition() map[string]Graphs {
-	return map[string](Graphs){
-		"hoge": Graphs{
-			Metrics: [](Metrics){
-				Metrics{Name: "hoge1", Label: "hoge1"},
+	return map[string]Graphs{
+		"hoge": {
+			Metrics: []Metrics{
+				{Name: "hoge1", Label: "hoge1"},
 			},
 		},
 	}
