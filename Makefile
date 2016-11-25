@@ -6,5 +6,5 @@ lint: deps
 	go tool vet -all .
 	golint -set_exit_status .
 
-test: lint
+test:
 	go test -v
