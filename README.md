@@ -78,14 +78,14 @@ If the differential value is ten-times above last value, the helper judge this i
 
 ## Tempfile
 
-`MackerelPlugin` interface has `Tempfile` field. The tempfile is used to calc differences in metrics with `Diff: true`.
+`MackerelPlugin` interface has `Tempfile` field. The Tempfile is used to calc differences in metrics with `Diff: true`.
 If this field is empty, default Tempfile will be placed under `os.Getenv("MACKEREL_PLUGIN_WORKDIR")` or `os.Tempdir()` and its filename will be generated from plugin filename.
 
 ### Default value of Tempfile
 
 mackerel-agent's plugins should place its Tempfile under `os.Getenv("MACKEREL_PLUGIN_WORKDIR")` unless specified explicitly.
 Since this helper handles the environmental value, it's recommended not to set default Tempfile path.
-But if a plugin wants to set default Tempfile filename by itself, use `MackerelPlugin.GenerateTempfilePathWithBase()`.
+But if a plugin wants to set default Tempfile filename by itself, use `MackerelPlugin.GenerateTempfilePathWithBase()`, which generates Tempfile path considering the environmental value.
 
 ```go
   helper.Tempfile = *optTempfile
