@@ -193,6 +193,19 @@ func (h *MackerelPlugin) tempfilename() string {
 
 var tempfileSanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
 
+func (h *MackerelPlugin) generateTempfileDir() string {
+	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
+	if dir == "" {
+		dir = os.TempDir()
+	}
+	return dir
+}
+
+// GenerateTempfilePathForWithBase generates Tempfile path with specified base.
+func (h *MackerelPlugin) GenerateTempfilePathWithBase(base string) string {
+	return filepath.Join(h.generateTempfileDir(), base)
+}
+
 func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	var prefix string
 	if p, ok := h.Plugin.(PluginWithPrefix); ok {
@@ -202,11 +215,7 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 		prefix = strings.TrimPrefix(tempfileSanitizeReg.ReplaceAllString(name, "_"), "mackerel-plugin-")
 	}
 	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
-	if dir == "" {
-		dir = os.TempDir()
-	}
-	return filepath.Join(dir, filename)
+	return filepath.Join(h.generateTempfileDir(), filename)
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
