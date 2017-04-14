@@ -76,6 +76,12 @@ If `Type` of metrics is `uint64` or `uint32` and `Diff` is true, the helper chec
 When differential value is negative, overflow or counter reset may be occurred.
 If the differential value is ten-times above last value, the helper judge this is counter reset, not counter overflow, then the helper set value is unknown. If not, the helper recognizes counter overflow occurred.
 
+## Tempfile
+
+`MackerelPlugin` interface has `Tempfile` field. The tempfile is used to calc differences in metrics with `Diff: true`.
+If this field is kept empty, default Tempfile will be placed under `os.Getenv("MACKEREL_PLUGIN_WORKDIR")` or `os.Tempdir()` and its filename will be generated from plugin filename.
+mackerel-agent's plugin should place its Tempfile under `os.Getenv("MACKEREL_PLUGIN_WORKDIR")` unless specified explicitly. If plugin wants to set default Tempfile filename by itself, use `MackerelPlugin.GenerateTempfilePathWithBase()`.
+
 ## Method
 
 A plugin must implement this interface and the `main` method.
