@@ -195,9 +195,9 @@ func (h *MackerelPlugin) tempfilename() string {
 
 var tempfileSanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
 
-// GenerateTempfilePathForWithBase generates Tempfile path with specified base.
-func (h *MackerelPlugin) GenerateTempfilePathWithBase(base string) string {
-	return filepath.Join(pluginutil.PluginWorkDir(), base)
+// SetTempfileWithBaseName sets Tempfile under proper directory with specified basename.
+func (h *MackerelPlugin) SetTempfileWithBaseName(base string) {
+	h.Tempfile = filepath.Join(pluginutil.PluginWorkDir(), base)
 }
 
 func (h *MackerelPlugin) generateTempfilePath(path string) string {
