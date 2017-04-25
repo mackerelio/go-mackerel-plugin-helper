@@ -479,13 +479,13 @@ func TestTempfilenameFromExecutableFilePath(t *testing.T) {
 	}
 }
 
-func TestSetTempfileWithBaseName(t *testing.T) {
+func TestSetTempfileWithBasename(t *testing.T) {
 	var p MackerelPlugin
 
 	expect1 := filepath.Join(os.TempDir(), "my-super-tempfile")
-	p.SetTempfileWithBaseName("my-super-tempfile")
+	p.SetTempfileByBasename("my-super-tempfile")
 	if p.Tempfile != expect1 {
-		t.Errorf("p.SetTempfileWithBaseName() should set %s, but: %s", expect1, p.Tempfile)
+		t.Errorf("p.SetTempfileByBasename() should set %s, but: %s", expect1, p.Tempfile)
 	}
 
 	origDir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
@@ -493,9 +493,9 @@ func TestSetTempfileWithBaseName(t *testing.T) {
 	defer os.Setenv("MACKEREL_PLUGIN_WORKDIR", origDir)
 
 	expect2 := "/tmp/somewhere/my-great-tempfile"
-	p.SetTempfileWithBaseName("my-great-tempfile")
+	p.SetTempfileByBasename("my-great-tempfile")
 	if p.Tempfile != expect2 {
-		t.Errorf("p.SetTempfileWithBaseName() should set %s, but: %s", expect2, p.Tempfile)
+		t.Errorf("p.SetTempfileByBasename() should set %s, but: %s", expect2, p.Tempfile)
 	}
 }
 

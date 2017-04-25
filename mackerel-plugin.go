@@ -195,8 +195,8 @@ func (h *MackerelPlugin) tempfilename() string {
 
 var tempfileSanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
 
-// SetTempfileWithBaseName sets Tempfile under proper directory with specified basename.
-func (h *MackerelPlugin) SetTempfileWithBaseName(base string) {
+// SetTempfileByBasename sets Tempfile under proper directory with specified basename.
+func (h *MackerelPlugin) SetTempfileByBasename(base string) {
 	h.Tempfile = filepath.Join(pluginutil.PluginWorkDir(), base)
 }
 

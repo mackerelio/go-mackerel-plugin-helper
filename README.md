@@ -85,12 +85,12 @@ If this field is omitted, the filename of the temporaty file is automatically ge
 
 mackerel-agent's plugins should place its Tempfile under `os.Getenv("MACKEREL_PLUGIN_WORKDIR")` unless specified explicitly.
 Since this helper handles the environmental value, it's recommended not to set default Tempfile path.
-But if a plugin wants to set default Tempfile filename by itself, use `MackerelPlugin.SetTempfileWithBaseName()`, which sets Tempfile path considering the environmental value.
+But if a plugin wants to set default Tempfile filename by itself, use `MackerelPlugin.SetTempfileByBasename()`, which sets Tempfile path considering the environmental value.
 
 ```go
   helper.Tempfile = *optTempfile
   if optTempfile == nil {
-    helper.SetTempfileWithBaseName("YOUR_DEFAULT_FILENAME")
+    helper.SetTempfileByBasename("YOUR_DEFAULT_FILENAME")
   }
 ```
 
