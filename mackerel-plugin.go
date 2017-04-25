@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mackerelio/golib/pluginutil"
 )
 
 // Metrics represents definition of a metric
@@ -193,6 +195,11 @@ func (h *MackerelPlugin) tempfilename() string {
 
 var tempfileSanitizeReg = regexp.MustCompile(`[^A-Za-z0-9_.-]`)
 
+// SetTempfileByBasename sets Tempfile under proper directory with specified basename.
+func (h *MackerelPlugin) SetTempfileByBasename(base string) {
+	h.Tempfile = filepath.Join(pluginutil.PluginWorkDir(), base)
+}
+
 func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	var prefix string
 	if p, ok := h.Plugin.(PluginWithPrefix); ok {
@@ -202,11 +209,7 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 		prefix = strings.TrimPrefix(tempfileSanitizeReg.ReplaceAllString(name, "_"), "mackerel-plugin-")
 	}
 	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
-	dir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
-	if dir == "" {
-		dir = os.TempDir()
-	}
-	return filepath.Join(dir, filename)
+	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
