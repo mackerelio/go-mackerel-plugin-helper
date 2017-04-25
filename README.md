@@ -78,8 +78,8 @@ If the differential value is ten-times above last value, the helper judge this i
 
 ## Tempfile
 
-`MackerelPlugin` interface has `Tempfile` field. The Tempfile is used to calc differences in metrics with `Diff: true`.
-If this field is empty, default Tempfile's filename will be generated from plugin filename.
+`MackerelPlugin` interface has `Tempfile` field. The Tempfile is used to calculate differences in metrics with `Diff: true`.
+If this field is omitted, the filename of the temporaty file is automatically generated from plugin filename.
 
 ### Default value of Tempfile
 
