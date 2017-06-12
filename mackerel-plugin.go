@@ -333,9 +333,11 @@ func (h *MackerelPlugin) OutputValues() {
 		}
 	}
 
-	err = h.saveValues(stat, now)
-	if err != nil {
-		log.Fatalln("saveValues: ", err)
+	if h.hasDiff() {
+		err = h.saveValues(stat, now)
+		if err != nil {
+			log.Fatalln("saveValues: ", err)
+		}
 	}
 }
 
