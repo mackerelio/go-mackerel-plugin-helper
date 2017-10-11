@@ -221,7 +221,7 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
-func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, optLastTime *time.Time) {
 	name := metric.Name
 	if metric.AbsoluteName && len(prefix) > 0 {
 		name = prefix + "." + name
@@ -245,11 +245,12 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 
 	if metric.Diff {
 		_, ok := (*lastStat)[name]
-		if ok {
+		if ok && optLastTime != nil {
 			var lastDiff float64
 			if (*lastStat)[".last_diff."+name] != nil {
 				lastDiff = toFloat64((*lastStat)[".last_diff."+name])
 			}
+			lastTime := *optLastTime
 			var err error
 			switch metric.Type {
 			case "uint32":
@@ -292,7 +293,7 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, now)
 }
 
-func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, optLastTime *time.Time) {
 	regexpStr := `\A` + prefix + "." + metric.Name
 	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
 	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
@@ -305,7 +306,7 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
-			h.formatValues("", metricEach, stat, lastStat, now, lastTime)
+			h.formatValues("", metricEach, stat, lastStat, now, optLastTime)
 		}
 	}
 }
@@ -334,9 +335,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &(h.lastStat), now, *h.lastTime)
+				h.formatValuesWithWildcard(key, metric, &stat, &(h.lastStat), now, h.lastTime)
 			} else {
-				h.formatValues(key, metric, &stat, &(h.lastStat), now, *h.lastTime)
+				h.formatValues(key, metric, &stat, &(h.lastStat), now, h.lastTime)
 			}
 		}
 	}
