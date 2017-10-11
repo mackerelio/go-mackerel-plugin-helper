@@ -329,7 +329,7 @@ func (h *MackerelPlugin) OutputValues() {
 	}
 
 	if err := h.LoadLastValues(); err != nil {
-		log.Println("fetchLastValues (ignore):", err)
+		log.Println("LoadLastValues (ignore):", err)
 	}
 
 	for key, graph := range h.GraphDefinition() {
