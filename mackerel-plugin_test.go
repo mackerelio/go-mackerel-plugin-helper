@@ -603,7 +603,7 @@ func TestLoadLastValues(t *testing.T) {
 		t.Errorf("lastTime unmatch: expected %s, but %s", lastTime.Unix(), plugin.lastTime.Unix())
 	}
 
-	if v, ok := plugin.lastStat["key1"]; !ok || v.(float64) != float64(3.2) {
+	if v, ok := plugin.LastStat["key1"]; !ok || v.(float64) != float64(3.2) {
 		t.Error("saved stats does not match")
 	}
 

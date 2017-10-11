@@ -52,7 +52,7 @@ type MackerelPlugin struct {
 	Plugin
 	Tempfile string
 	diff     *bool
-	lastStat map[string]interface{}
+	LastStat map[string]interface{}
 	lastTime *time.Time
 }
 
@@ -120,7 +120,7 @@ func (h *MackerelPlugin) LoadLastValues() error {
 	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&stat)
-	h.lastStat = stat
+	h.LastStat = stat
 	switch stat["_lastTime"].(type) {
 	case float64:
 		lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
@@ -335,9 +335,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &(h.lastStat), now, h.lastTime)
+				h.formatValuesWithWildcard(key, metric, &stat, &(h.LastStat), now, h.lastTime)
 			} else {
-				h.formatValues(key, metric, &stat, &(h.lastStat), now, h.lastTime)
+				h.formatValues(key, metric, &stat, &(h.LastStat), now, h.lastTime)
 			}
 		}
 	}
