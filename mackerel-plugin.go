@@ -53,7 +53,7 @@ type MackerelPlugin struct {
 	Tempfile string
 	diff     *bool
 	LastStat map[string]interface{}
-	lastTime *time.Time
+	LastTime *time.Time
 }
 
 // NewMackerelPlugin returns new MackerelPlugin struct
@@ -101,7 +101,7 @@ func (h *MackerelPlugin) LoadLastValues() error {
 		return nil
 	}
 
-	if h.lastTime != nil {
+	if h.LastTime != nil {
 		return nil
 	}
 
@@ -109,7 +109,7 @@ func (h *MackerelPlugin) LoadLastValues() error {
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
-		h.lastTime = &lastTime
+		h.LastTime = &lastTime
 		if os.IsNotExist(err) {
 			return nil
 		}
@@ -127,7 +127,7 @@ func (h *MackerelPlugin) LoadLastValues() error {
 	case int64:
 		lastTime = time.Unix(stat["_lastTime"].(int64), 0)
 	}
-	h.lastTime = &lastTime
+	h.LastTime = &lastTime
 	return err
 }
 
@@ -335,9 +335,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &(h.LastStat), now, h.lastTime)
+				h.formatValuesWithWildcard(key, metric, &stat, &(h.LastStat), now, h.LastTime)
 			} else {
-				h.formatValues(key, metric, &stat, &(h.LastStat), now, h.lastTime)
+				h.formatValues(key, metric, &stat, &(h.LastStat), now, h.LastTime)
 			}
 		}
 	}

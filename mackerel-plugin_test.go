@@ -599,8 +599,8 @@ func TestLoadLastValues(t *testing.T) {
 		t.Error("something went wrong")
 	}
 
-	if lastTime.Unix() != plugin.lastTime.Unix() {
-		t.Errorf("lastTime unmatch: expected %s, but %s", lastTime.Unix(), plugin.lastTime.Unix())
+	if lastTime.Unix() != plugin.LastTime.Unix() {
+		t.Errorf("lastTime unmatch: expected %s, but %s", lastTime.Unix(), plugin.LastTime.Unix())
 	}
 
 	if v, ok := plugin.LastStat["key1"]; !ok || v.(float64) != float64(3.2) {
@@ -630,7 +630,7 @@ func TestLoadLastValues_NotFound(t *testing.T) {
 		t.Error("something went wrong")
 	}
 
-	if plugin.lastTime == nil {
+	if plugin.LastTime == nil {
 		t.Errorf("lastTime should be set even if file not found")
 	}
 }
@@ -648,7 +648,7 @@ func TestLoadLastValues_ParseFailed(t *testing.T) {
 		t.Error("Error should be raised")
 	}
 
-	if plugin.lastTime == nil {
+	if plugin.LastTime == nil {
 		t.Errorf("lastTime should be set even if load failed due to parse failure")
 	}
 }
