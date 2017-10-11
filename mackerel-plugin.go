@@ -52,6 +52,8 @@ type MackerelPlugin struct {
 	Plugin
 	Tempfile string
 	diff     *bool
+	lastStat map[string]interface{}
+	lastTime *time.Time
 }
 
 // NewMackerelPlugin returns new MackerelPlugin struct
@@ -92,34 +94,41 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 	}
 }
 
-func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, error) {
+// LoadLastValues loads previous values stored in Tempfile.
+// This method loads the values only once
+func (h *MackerelPlugin) LoadLastValues() error {
 	if !h.hasDiff() {
-		return nil, time.Unix(0, 0), nil
+		return nil
 	}
+
+	if h.lastTime != nil {
+		return nil
+	}
+
 	lastTime := time.Now()
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
+		h.lastTime = &lastTime
 		if os.IsNotExist(err) {
-			return nil, lastTime, nil
+			return nil
 		}
-		return nil, lastTime, err
+		return err
 	}
 	defer f.Close()
 
 	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&stat)
+	h.lastStat = stat
 	switch stat["_lastTime"].(type) {
 	case float64:
 		lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
 	case int64:
 		lastTime = time.Unix(stat["_lastTime"].(int64), 0)
 	}
-	if err != nil {
-		return stat, lastTime, err
-	}
-	return stat, lastTime, nil
+	h.lastTime = &lastTime
+	return err
 }
 
 func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time) error {
@@ -318,17 +327,16 @@ func (h *MackerelPlugin) OutputValues() {
 		log.Fatalln("OutputValues: ", err)
 	}
 
-	lastStat, lastTime, err := h.fetchLastValues()
-	if err != nil {
+	if err := h.LoadLastValues(); err != nil {
 		log.Println("fetchLastValues (ignore):", err)
 	}
 
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValuesWithWildcard(key, metric, &stat, &(h.lastStat), now, *h.lastTime)
 			} else {
-				h.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValues(key, metric, &stat, &(h.lastStat), now, *h.lastTime)
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package mackerelplugin
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -577,5 +578,79 @@ func TestPluginHasDiff(t *testing.T) {
 	pHasntDiff := NewMackerelPlugin(testPHasntDiff{})
 	if pHasntDiff.hasDiff() {
 		t.Errorf("something went wrong")
+	}
+}
+
+func TestLoadLastValues(t *testing.T) {
+	lastTime := time.Now().Add(-1 * time.Duration(1*time.Minute))
+	stat := map[string]interface{}{
+		"key1":      float64(3.2),
+		"key2":      float64(4.3),
+		"_lastTime": lastTime.Unix(),
+	}
+
+	tempfilePath := filepath.Join(os.TempDir(), "mackerel-plugin-test-tempfile")
+	f, _ := os.Create(tempfilePath)
+	json.NewEncoder(f).Encode(stat)
+	f.Close()
+
+	plugin := NewMackerelPlugin(testPHasDiff{})
+	plugin.Tempfile = tempfilePath
+
+	if err := plugin.LoadLastValues(); err != nil {
+		t.Error("something went wrong")
+	}
+
+	if lastTime.Unix() != plugin.lastTime.Unix() {
+		t.Errorf("lastTime unmatch: expected %s, but %s", lastTime.Unix(), plugin.lastTime.Unix())
+	}
+
+	if v, ok := plugin.lastStat["key1"]; !ok || v.(float64) != float64(3.2) {
+		t.Error("saved stats does not match")
+	}
+
+	if err := plugin.LoadLastValues(); err != nil {
+		t.Error("Calling LoadLastValues() multiple times should not raise error")
+	}
+}
+
+func TestLoadLastValues_WithoutDiff(t *testing.T) {
+	plugin := NewMackerelPlugin(testP{})
+
+	if err := plugin.LoadLastValues(); err != nil {
+		t.Error("something went wrong")
+	}
+}
+
+func TestLoadLastValues_NotFound(t *testing.T) {
+	tempfilePath := filepath.Join(os.TempDir(), "mackerel-plugin-test-tempfile-notfound")
+
+	plugin := NewMackerelPlugin(testPHasDiff{})
+	plugin.Tempfile = tempfilePath
+
+	if err := plugin.LoadLastValues(); err != nil {
+		t.Error("something went wrong")
+	}
+
+	if plugin.lastTime == nil {
+		t.Errorf("lastTime should be set even if file not found")
+	}
+}
+
+func TestLoadLastValues_ParseFailed(t *testing.T) {
+	tempfilePath := filepath.Join(os.TempDir(), "mackerel-plugin-test-tempfile-broken-json")
+	f, _ := os.Create(tempfilePath)
+	f.WriteString(`{"this_is_broken:}`)
+	f.Close()
+
+	plugin := NewMackerelPlugin(testPHasDiff{})
+	plugin.Tempfile = tempfilePath
+
+	if err := plugin.LoadLastValues(); err == nil {
+		t.Error("Error should be raised")
+	}
+
+	if plugin.lastTime == nil {
+		t.Errorf("lastTime should be set even if load failed due to parse failure")
 	}
 }
