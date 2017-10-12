@@ -92,7 +92,7 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 	}
 }
 
-func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, error) {
+func (h *MackerelPlugin) FetchLastValues() (map[string]interface{}, time.Time, error) {
 	if !h.hasDiff() {
 		return nil, time.Unix(0, 0), nil
 	}
@@ -318,9 +318,9 @@ func (h *MackerelPlugin) OutputValues() {
 		log.Fatalln("OutputValues: ", err)
 	}
 
-	lastStat, lastTime, err := h.fetchLastValues()
+	lastStat, lastTime, err := h.FetchLastValues()
 	if err != nil {
-		log.Println("fetchLastValues (ignore):", err)
+		log.Println("FetchLastValues (ignore):", err)
 	}
 
 	for key, graph := range h.GraphDefinition() {
