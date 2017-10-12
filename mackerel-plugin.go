@@ -127,7 +127,7 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 	return
 }
 
-func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time) error {
+func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
 	if !h.hasDiff() {
 		return nil
 	}
@@ -138,9 +138,9 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	}
 	defer f.Close()
 
-	values["_lastTime"] = now.Unix()
+	metricValues.Values["_lastTime"] = metricValues.Timestamp.Unix()
 	encoder := json.NewEncoder(f)
-	err = encoder.Encode(values)
+	err = encoder.Encode(metricValues.Values)
 	if err != nil {
 		return err
 	}
@@ -317,11 +317,11 @@ func (h *MackerelPlugin) Run() {
 
 // OutputValues output the metrics
 func (h *MackerelPlugin) OutputValues() {
-	now := time.Now()
 	stat, err := h.FetchMetrics()
 	if err != nil {
 		log.Fatalln("OutputValues: ", err)
 	}
+	metricValues := MetricValues{Values: stat, Timestamp: time.Now()}
 
 	lastMetricValues, err := h.FetchLastValues()
 	if err != nil {
@@ -331,14 +331,14 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, MetricValues{Values: stat, Timestamp: now}, lastMetricValues)
+				h.formatValuesWithWildcard(key, metric, metricValues, lastMetricValues)
 			} else {
-				h.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, lastMetricValues)
+				h.formatValues(key, metric, metricValues, lastMetricValues)
 			}
 		}
 	}
 
-	err = h.saveValues(stat, now)
+	err = h.saveValues(metricValues)
 	if err != nil {
 		log.Fatalln("saveValues: ", err)
 	}
