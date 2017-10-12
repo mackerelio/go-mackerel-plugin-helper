@@ -218,12 +218,12 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
-func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat map[string]interface{}, lastStat map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	name := metric.Name
 	if metric.AbsoluteName && len(prefix) > 0 {
 		name = prefix + "." + name
 	}
-	value, ok := stat[name]
+	value, ok := metricValues.Values[name]
 	if !ok || value == nil {
 		return
 	}
@@ -241,26 +241,26 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat map[st
 	}
 
 	if metric.Diff {
-		_, ok := lastStat[name]
+		_, ok := lastMetricValues.Values[name]
 		if ok {
 			var lastDiff float64
-			if lastStat[".last_diff."+name] != nil {
-				lastDiff = toFloat64(lastStat[".last_diff."+name])
+			if lastMetricValues.Values[".last_diff."+name] != nil {
+				lastDiff = toFloat64(lastMetricValues.Values[".last_diff."+name])
 			}
 			var err error
 			switch metric.Type {
 			case "uint32":
-				value, err = h.calcDiffUint32(toUint32(value), now, toUint32(lastStat[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint32(toUint32(value), metricValues.Timestamp, toUint32(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
 			case "uint64":
-				value, err = h.calcDiffUint64(toUint64(value), now, toUint64(lastStat[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint64(toUint64(value), metricValues.Timestamp, toUint64(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
 			default:
-				value, err = h.calcDiff(toFloat64(value), now, toFloat64(lastStat[name]), lastTime)
+				value, err = h.calcDiff(toFloat64(value), metricValues.Timestamp, toFloat64(lastMetricValues.Values[name]), lastMetricValues.Timestamp)
 			}
 			if err != nil {
 				log.Println("OutputValues: ", err)
 				return
 			}
-			stat[".last_diff."+name] = value
+			metricValues.Values[".last_diff."+name] = value
 		} else {
 			log.Printf("%s does not exist at last fetch\n", name)
 			return
@@ -286,10 +286,10 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat map[st
 		metricNames = append(metricNames, prefix)
 	}
 	metricNames = append(metricNames, metric.Name)
-	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, now)
+	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, metricValues.Timestamp)
 }
 
-func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat map[string]interface{}, lastStat map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	regexpStr := `\A` + prefix + "." + metric.Name
 	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
 	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
@@ -298,11 +298,11 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
 	}
-	for k := range stat {
+	for k := range metricValues.Values {
 		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
-			h.formatValues("", metricEach, stat, lastStat, now, lastTime)
+			h.formatValues("", metricEach, metricValues, lastMetricValues)
 		}
 	}
 }
@@ -332,9 +332,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, stat, lastStat, now, lastTime)
+				h.formatValuesWithWildcard(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
 			} else {
-				h.formatValues(key, metric, stat, lastStat, now, lastTime)
+				h.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
 			}
 		}
 	}
