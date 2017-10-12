@@ -212,12 +212,12 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
-func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat map[string]interface{}, lastStat map[string]interface{}, now time.Time, lastTime time.Time) {
 	name := metric.Name
 	if metric.AbsoluteName && len(prefix) > 0 {
 		name = prefix + "." + name
 	}
-	value, ok := (*stat)[name]
+	value, ok := stat[name]
 	if !ok || value == nil {
 		return
 	}
@@ -235,26 +235,26 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 	}
 
 	if metric.Diff {
-		_, ok := (*lastStat)[name]
+		_, ok := lastStat[name]
 		if ok {
 			var lastDiff float64
-			if (*lastStat)[".last_diff."+name] != nil {
-				lastDiff = toFloat64((*lastStat)[".last_diff."+name])
+			if lastStat[".last_diff."+name] != nil {
+				lastDiff = toFloat64(lastStat[".last_diff."+name])
 			}
 			var err error
 			switch metric.Type {
 			case "uint32":
-				value, err = h.calcDiffUint32(toUint32(value), now, toUint32((*lastStat)[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint32(toUint32(value), now, toUint32(lastStat[name]), lastTime, lastDiff)
 			case "uint64":
-				value, err = h.calcDiffUint64(toUint64(value), now, toUint64((*lastStat)[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint64(toUint64(value), now, toUint64(lastStat[name]), lastTime, lastDiff)
 			default:
-				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[name]), lastTime)
+				value, err = h.calcDiff(toFloat64(value), now, toFloat64(lastStat[name]), lastTime)
 			}
 			if err != nil {
 				log.Println("OutputValues: ", err)
 				return
 			}
-			(*stat)[".last_diff."+name] = value
+			stat[".last_diff."+name] = value
 		} else {
 			log.Printf("%s does not exist at last fetch\n", name)
 			return
@@ -283,7 +283,7 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, now)
 }
 
-func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat map[string]interface{}, lastStat map[string]interface{}, now time.Time, lastTime time.Time) {
 	regexpStr := `\A` + prefix + "." + metric.Name
 	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
 	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
@@ -292,7 +292,7 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
 	}
-	for k := range *stat {
+	for k := range stat {
 		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
@@ -326,9 +326,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValuesWithWildcard(key, metric, stat, lastStat, now, lastTime)
 			} else {
-				h.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValues(key, metric, stat, lastStat, now, lastTime)
 			}
 		}
 	}
