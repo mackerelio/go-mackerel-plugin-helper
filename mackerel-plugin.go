@@ -98,34 +98,33 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 	}
 }
 
-func (h *MackerelPlugin) FetchLastValues() (map[string]interface{}, time.Time, error) {
+func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error) {
 	if !h.hasDiff() {
-		return nil, time.Unix(0, 0), nil
+		return
 	}
-	lastTime := time.Now()
+	metricValues.Timestamp = time.Now()
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, lastTime, nil
+			return
 		}
-		return nil, lastTime, err
+		return
 	}
 	defer f.Close()
 
-	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
-	err = decoder.Decode(&stat)
-	switch stat["_lastTime"].(type) {
+	err = decoder.Decode(&metricValues.Values)
+	switch metricValues.Values["_lastTime"].(type) {
 	case float64:
-		lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
+		metricValues.Timestamp = time.Unix(int64(metricValues.Values["_lastTime"].(float64)), 0)
 	case int64:
-		lastTime = time.Unix(stat["_lastTime"].(int64), 0)
+		metricValues.Timestamp = time.Unix(metricValues.Values["_lastTime"].(int64), 0)
 	}
 	if err != nil {
-		return stat, lastTime, err
+		return
 	}
-	return stat, lastTime, nil
+	return
 }
 
 func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time) error {
@@ -324,7 +323,7 @@ func (h *MackerelPlugin) OutputValues() {
 		log.Fatalln("OutputValues: ", err)
 	}
 
-	lastStat, lastTime, err := h.FetchLastValues()
+	lastMetricValues, err := h.FetchLastValues()
 	if err != nil {
 		log.Println("FetchLastValues (ignore):", err)
 	}
@@ -332,9 +331,9 @@ func (h *MackerelPlugin) OutputValues() {
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
+				h.formatValuesWithWildcard(key, metric, MetricValues{Values: stat, Timestamp: now}, lastMetricValues)
 			} else {
-				h.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
+				h.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, lastMetricValues)
 			}
 		}
 	}
