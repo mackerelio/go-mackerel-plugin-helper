@@ -35,6 +35,12 @@ type Graphs struct {
 	Metrics []Metrics `json:"metrics"`
 }
 
+// MetricValues represents a collection of metric values and its timestamp
+type MetricValues struct {
+	Values    map[string]interface{}
+	Timestamp time.Time
+}
+
 // Plugin is old interface of mackerel-plugin
 type Plugin interface {
 	FetchMetrics() (map[string]interface{}, error)
