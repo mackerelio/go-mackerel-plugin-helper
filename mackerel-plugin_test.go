@@ -152,7 +152,7 @@ func ExampleFormatValues() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.cmd_get	500.000000	1437227240
@@ -168,8 +168,8 @@ func ExampleFormatValuesAbsoluteName() {
 	lastStat := map[string]interface{}{"foo.cmd_get": uint64(500), ".last_diff.foo.cmd_get": 300.0, "bar.cmd_get": uint64(600), ".last_diff.bar.cmd_get": 400.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefixA, metricA, &stat, &lastStat, now, lastTime)
-	mp.formatValues(prefixB, metricB, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefixA, metricA, stat, lastStat, now, lastTime)
+	mp.formatValues(prefixB, metricB, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.cmd_get	500.000000	1437227240
@@ -184,7 +184,7 @@ func ExampleFormatValuesAbsoluteNameButNoPrefix() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// cmd_get	500.000000	1437227240
@@ -198,7 +198,7 @@ func ExampleFormatValuesWithCounterReset() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(500), ".last_diff.cmd_get": 300.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 }
@@ -211,7 +211,7 @@ func ExampleFormatFloatValuesWithCounterReset() {
 	lastStat := map[string]interface{}{"cmd_get": 500.0, ".last_diff.cmd_get": 300.0}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 }
@@ -224,7 +224,7 @@ func ExampleFormatValuesWithOverflow() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(math.MaxUint64 - 100), ".last_diff.cmd_get": float64(100.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.cmd_get	601.000000	1437227240
@@ -238,7 +238,7 @@ func ExampleFormatValuesWithOverflowAndTooHighDifference() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(math.MaxUint64 - 100), ".last_diff.cmd_get": float64(10.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 }
@@ -251,7 +251,7 @@ func ExampleFormatValuesWithOverflowAndNoLastDiff() {
 	lastStat := map[string]interface{}{"cmd_get": uint64(math.MaxUint64 - 100)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValues(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValues(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 }
@@ -264,7 +264,7 @@ func ExampleFormatValuesWithWildcard() {
 	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValuesWithWildcard(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.1.bar	500.000000	1437227240
@@ -279,7 +279,7 @@ func ExampleFormatValuesWithWildcardAndAbsoluteName() {
 	lastStat := map[string]interface{}{"foo.1.bar": uint64(500), ".last_diff.foo.1.bar": float64(2.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValuesWithWildcard(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.1.bar	500.000000	1437227240
@@ -293,7 +293,7 @@ func ExampleFormatValuesWithWildcardAndNoDiff() {
 	lastStat := map[string]interface{}{"foo.1.bar": float64(500), ".last_diff.foo.1.bar": float64(2.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValuesWithWildcard(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.1.bar	1000.000000	1437227240
@@ -307,7 +307,7 @@ func ExampleFormatValuesWithWildcardAstarisk() {
 	lastStat := map[string]interface{}{"foo.1": uint64(500), ".last_diff.foo.1": float64(2.0)}
 	now := time.Unix(1437227240, 0)
 	lastTime := now.Add(-time.Duration(60) * time.Second)
-	mp.formatValuesWithWildcard(prefix, metric, &stat, &lastStat, now, lastTime)
+	mp.formatValuesWithWildcard(prefix, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// foo.1	500.000000	1437227240
@@ -516,7 +516,7 @@ func ExamplePluginWithPrefixOutputValues() {
 	var lastStat map[string]interface{}
 	now := time.Unix(1437227240, 0)
 	lastTime := time.Unix(0, 0)
-	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+	helper.formatValues(key, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// testP.bar	15.000000	1437227240
@@ -530,7 +530,7 @@ func ExamplePluginWithPrefixOutputValues2() {
 	var lastStat map[string]interface{}
 	now := time.Unix(1437227240, 0)
 	lastTime := time.Unix(0, 0)
-	helper.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+	helper.formatValues(key, metric, stat, lastStat, now, lastTime)
 
 	// Output:
 	// testP.fuga.baz	18.000000	1437227240
