@@ -35,6 +35,12 @@ type Graphs struct {
 	Metrics []Metrics `json:"metrics"`
 }
 
+// MetricValues represents a collection of metric values and its timestamp
+type MetricValues struct {
+	Values    map[string]interface{}
+	Timestamp time.Time
+}
+
 // Plugin is old interface of mackerel-plugin
 type Plugin interface {
 	FetchMetrics() (map[string]interface{}, error)
@@ -92,37 +98,36 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 	}
 }
 
-func (h *MackerelPlugin) fetchLastValues() (map[string]interface{}, time.Time, error) {
+func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error) {
 	if !h.hasDiff() {
-		return nil, time.Unix(0, 0), nil
+		return
 	}
-	lastTime := time.Now()
+	metricValues.Timestamp = time.Now()
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, lastTime, nil
+			return
 		}
-		return nil, lastTime, err
+		return
 	}
 	defer f.Close()
 
-	stat := make(map[string]interface{})
 	decoder := json.NewDecoder(f)
-	err = decoder.Decode(&stat)
-	switch stat["_lastTime"].(type) {
+	err = decoder.Decode(&metricValues.Values)
+	switch metricValues.Values["_lastTime"].(type) {
 	case float64:
-		lastTime = time.Unix(int64(stat["_lastTime"].(float64)), 0)
+		metricValues.Timestamp = time.Unix(int64(metricValues.Values["_lastTime"].(float64)), 0)
 	case int64:
-		lastTime = time.Unix(stat["_lastTime"].(int64), 0)
+		metricValues.Timestamp = time.Unix(metricValues.Values["_lastTime"].(int64), 0)
 	}
 	if err != nil {
-		return stat, lastTime, err
+		return
 	}
-	return stat, lastTime, nil
+	return
 }
 
-func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time) error {
+func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
 	if !h.hasDiff() {
 		return nil
 	}
@@ -133,9 +138,9 @@ func (h *MackerelPlugin) saveValues(values map[string]interface{}, now time.Time
 	}
 	defer f.Close()
 
-	values["_lastTime"] = now.Unix()
+	metricValues.Values["_lastTime"] = metricValues.Timestamp.Unix()
 	encoder := json.NewEncoder(f)
-	err = encoder.Encode(values)
+	err = encoder.Encode(metricValues.Values)
 	if err != nil {
 		return err
 	}
@@ -212,12 +217,12 @@ func (h *MackerelPlugin) generateTempfilePath(path string) string {
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
-func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	name := metric.Name
 	if metric.AbsoluteName && len(prefix) > 0 {
 		name = prefix + "." + name
 	}
-	value, ok := (*stat)[name]
+	value, ok := metricValues.Values[name]
 	if !ok || value == nil {
 		return
 	}
@@ -235,26 +240,26 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 	}
 
 	if metric.Diff {
-		_, ok := (*lastStat)[name]
+		_, ok := lastMetricValues.Values[name]
 		if ok {
 			var lastDiff float64
-			if (*lastStat)[".last_diff."+name] != nil {
-				lastDiff = toFloat64((*lastStat)[".last_diff."+name])
+			if lastMetricValues.Values[".last_diff."+name] != nil {
+				lastDiff = toFloat64(lastMetricValues.Values[".last_diff."+name])
 			}
 			var err error
 			switch metric.Type {
 			case "uint32":
-				value, err = h.calcDiffUint32(toUint32(value), now, toUint32((*lastStat)[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint32(toUint32(value), metricValues.Timestamp, toUint32(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
 			case "uint64":
-				value, err = h.calcDiffUint64(toUint64(value), now, toUint64((*lastStat)[name]), lastTime, lastDiff)
+				value, err = h.calcDiffUint64(toUint64(value), metricValues.Timestamp, toUint64(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
 			default:
-				value, err = h.calcDiff(toFloat64(value), now, toFloat64((*lastStat)[name]), lastTime)
+				value, err = h.calcDiff(toFloat64(value), metricValues.Timestamp, toFloat64(lastMetricValues.Values[name]), lastMetricValues.Timestamp)
 			}
 			if err != nil {
 				log.Println("OutputValues: ", err)
 				return
 			}
-			(*stat)[".last_diff."+name] = value
+			metricValues.Values[".last_diff."+name] = value
 		} else {
 			log.Printf("%s does not exist at last fetch\n", name)
 			return
@@ -280,10 +285,10 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, stat *map[s
 		metricNames = append(metricNames, prefix)
 	}
 	metricNames = append(metricNames, metric.Name)
-	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, now)
+	h.printValue(os.Stdout, strings.Join(metricNames, "."), value, metricValues.Timestamp)
 }
 
-func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, stat *map[string]interface{}, lastStat *map[string]interface{}, now time.Time, lastTime time.Time) {
+func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	regexpStr := `\A` + prefix + "." + metric.Name
 	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
 	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
@@ -292,11 +297,11 @@ func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics,
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
 	}
-	for k := range *stat {
+	for k := range metricValues.Values {
 		if re.MatchString(k) {
 			metricEach := metric
 			metricEach.Name = k
-			h.formatValues("", metricEach, stat, lastStat, now, lastTime)
+			h.formatValues("", metricEach, metricValues, lastMetricValues)
 		}
 	}
 }
@@ -312,28 +317,28 @@ func (h *MackerelPlugin) Run() {
 
 // OutputValues output the metrics
 func (h *MackerelPlugin) OutputValues() {
-	now := time.Now()
 	stat, err := h.FetchMetrics()
 	if err != nil {
 		log.Fatalln("OutputValues: ", err)
 	}
+	metricValues := MetricValues{Values: stat, Timestamp: time.Now()}
 
-	lastStat, lastTime, err := h.fetchLastValues()
+	lastMetricValues, err := h.FetchLastValues()
 	if err != nil {
-		log.Println("fetchLastValues (ignore):", err)
+		log.Println("FetchLastValues (ignore):", err)
 	}
 
 	for key, graph := range h.GraphDefinition() {
 		for _, metric := range graph.Metrics {
 			if strings.ContainsAny(key+metric.Name, "*#") {
-				h.formatValuesWithWildcard(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValuesWithWildcard(key, metric, metricValues, lastMetricValues)
 			} else {
-				h.formatValues(key, metric, &stat, &lastStat, now, lastTime)
+				h.formatValues(key, metric, metricValues, lastMetricValues)
 			}
 		}
 	}
 
-	err = h.saveValues(stat, now)
+	err = h.saveValues(metricValues)
 	if err != nil {
 		log.Fatalln("saveValues: ", err)
 	}
