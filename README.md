@@ -3,6 +3,11 @@ go-mackerel-plugin-helper [![Build Status](https://travis-ci.org/mackerelio/go-m
 
 This package provides helper methods to create mackerel agent plugin easily.
 
+Recommend to use go-mackerel-plugin
+===================================
+
+We recommend to use [go-mackerel-plugin](https://github.com/mackerelio/go-mackerel-plugin) instead of go-mackerel-plugin-helper to create mackerel agent plugin.  It is because you can create a plugin more simply by go-mackerel-plugin than by go-mackerel-plugin-helper.
+
 How to use
 ==========
 
