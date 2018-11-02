@@ -1,6 +1,7 @@
 package mackerelplugin
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -193,7 +194,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 
 func (h *MackerelPlugin) tempfilename() string {
 	if h.Tempfile == "" {
-		h.Tempfile = h.generateTempfilePath(os.Args[0])
+		h.Tempfile = h.generateTempfilePath(os.Args)
 	}
 	return h.Tempfile
 }
@@ -205,15 +206,22 @@ func (h *MackerelPlugin) SetTempfileByBasename(base string) {
 	h.Tempfile = filepath.Join(pluginutil.PluginWorkDir(), base)
 }
 
-func (h *MackerelPlugin) generateTempfilePath(path string) string {
+func (h *MackerelPlugin) generateTempfilePath(args []string) string {
+	commandPath := args[0]
 	var prefix string
 	if p, ok := h.Plugin.(PluginWithPrefix); ok {
 		prefix = p.MetricKeyPrefix()
 	} else {
-		name := filepath.Base(path)
+		name := filepath.Base(commandPath)
 		prefix = strings.TrimPrefix(tempfileSanitizeReg.ReplaceAllString(name, "_"), "mackerel-plugin-")
 	}
-	filename := fmt.Sprintf("mackerel-plugin-%s", prefix)
+	filename := fmt.Sprintf(
+		"mackerel-plugin-%s-%x",
+		prefix,
+		// When command-line options are different, mostly different metrics.
+		// e.g. `-host` and `-port` options for mackerel-plugin-mysql
+		sha1.Sum([]byte(strings.Join(args[1:], " "))),
+	)
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
