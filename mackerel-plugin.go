@@ -127,6 +127,19 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 	return
 }
 
+var errStateUpdated = errors.New("state was recently updated")
+
+func (h *MackerelPlugin) fetchLastValuesSafe(now time.Time) (metricValues MetricValues, err error) {
+	m, err := h.FetchLastValues()
+	if err != nil {
+		return m, err
+	}
+	if now.Sub(m.Timestamp) < time.Second {
+		return m, errStateUpdated
+	}
+	return m, nil
+}
+
 func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
 	if !h.hasDiff() {
 		return nil
@@ -330,7 +343,7 @@ func (h *MackerelPlugin) OutputValues() {
 	}
 	metricValues := MetricValues{Values: stat, Timestamp: time.Now()}
 
-	lastMetricValues, err := h.FetchLastValues()
+	lastMetricValues, err := h.fetchLastValuesSafe(metricValues.Timestamp)
 	if err != nil {
 		log.Println("FetchLastValues (ignore):", err)
 	}

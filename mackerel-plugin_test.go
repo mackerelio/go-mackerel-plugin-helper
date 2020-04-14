@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -172,6 +173,29 @@ func TestFetchLastValues_stateFileNotFound(t *testing.T) {
 	}
 	if !m.Timestamp.IsZero() {
 		t.Errorf("Timestamp = %v; want 0001-01-01", m.Timestamp)
+	}
+}
+
+func TestFetchLastValues_readStateSameTime(t *testing.T) {
+	var mp MackerelPlugin
+	mp.Plugin = &emptyPlugin{}
+	f, err := ioutil.TempFile("", "mackerel-plugin-helper.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := f.Name()
+	defer os.Remove(file)
+	mp.Tempfile = file
+	mp.diff = boolPtr(true)
+	metricValues := MetricValues{
+		Values:    make(map[string]interface{}),
+		Timestamp: time.Now(),
+	}
+	mp.saveValues(metricValues)
+
+	_, err = mp.fetchLastValuesSafe(metricValues.Timestamp)
+	if err != errStateUpdated {
+		t.Errorf("FetchLastValues: %v; want %v", err, errStateUpdated)
 	}
 }
 
