@@ -103,12 +103,11 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 	if !h.hasDiff() {
 		return
 	}
-	metricValues.Timestamp = time.Now()
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return
+			return metricValues, nil
 		}
 		return
 	}
@@ -116,14 +115,14 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&metricValues.Values)
+	if err != nil {
+		return
+	}
 	switch metricValues.Values["_lastTime"].(type) {
 	case float64:
 		metricValues.Timestamp = time.Unix(int64(metricValues.Values["_lastTime"].(float64)), 0)
 	case int64:
 		metricValues.Timestamp = time.Unix(metricValues.Values["_lastTime"].(int64), 0)
-	}
-	if err != nil {
-		return
 	}
 	return
 }

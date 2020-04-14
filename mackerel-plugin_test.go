@@ -146,6 +146,35 @@ func TestPrintValueFloat64(t *testing.T) {
 	}
 }
 
+type emptyPlugin struct {
+}
+
+func (*emptyPlugin) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (*emptyPlugin) GraphDefinition() map[string]Graphs {
+	return nil
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+func TestFetchLastValues_stateFileNotFound(t *testing.T) {
+	var mp MackerelPlugin
+	mp.Plugin = &emptyPlugin{}
+	mp.Tempfile = "state_file_should_not_exist.json"
+	mp.diff = boolPtr(true)
+	m, err := mp.FetchLastValues()
+	if err != nil {
+		t.Fatalf("FetchLastValues: %v", err)
+	}
+	if !m.Timestamp.IsZero() {
+		t.Errorf("Timestamp = %v; want 0001-01-01", m.Timestamp)
+	}
+}
+
 func ExampleFormatValues() {
 	var mp MackerelPlugin
 	prefix := "foo"
