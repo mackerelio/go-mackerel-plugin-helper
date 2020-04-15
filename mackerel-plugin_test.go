@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -143,6 +144,58 @@ func TestPrintValueFloat64(t *testing.T) {
 
 	if bytes.Compare(expected, s.Bytes()) != 0 {
 		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
+	}
+}
+
+type emptyPlugin struct {
+}
+
+func (*emptyPlugin) FetchMetrics() (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (*emptyPlugin) GraphDefinition() map[string]Graphs {
+	return nil
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+func TestFetchLastValues_stateFileNotFound(t *testing.T) {
+	var mp MackerelPlugin
+	mp.Plugin = &emptyPlugin{}
+	mp.Tempfile = "state_file_should_not_exist.json"
+	mp.diff = boolPtr(true)
+	m, err := mp.FetchLastValues()
+	if err != nil {
+		t.Fatalf("FetchLastValues: %v", err)
+	}
+	if !m.Timestamp.IsZero() {
+		t.Errorf("Timestamp = %v; want 0001-01-01", m.Timestamp)
+	}
+}
+
+func TestFetchLastValues_readStateSameTime(t *testing.T) {
+	var mp MackerelPlugin
+	mp.Plugin = &emptyPlugin{}
+	f, err := ioutil.TempFile("", "mackerel-plugin-helper.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := f.Name()
+	defer os.Remove(file)
+	mp.Tempfile = file
+	mp.diff = boolPtr(true)
+	metricValues := MetricValues{
+		Values:    make(map[string]interface{}),
+		Timestamp: time.Now(),
+	}
+	mp.saveValues(metricValues)
+
+	_, err = mp.fetchLastValuesSafe(metricValues.Timestamp)
+	if err != errStateUpdated {
+		t.Errorf("FetchLastValues: %v; want %v", err, errStateUpdated)
 	}
 }
 

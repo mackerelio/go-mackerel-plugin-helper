@@ -103,12 +103,11 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 	if !h.hasDiff() {
 		return
 	}
-	metricValues.Timestamp = time.Now()
 
 	f, err := os.Open(h.tempfilename())
 	if err != nil {
 		if os.IsNotExist(err) {
-			return
+			return metricValues, nil
 		}
 		return
 	}
@@ -116,16 +115,29 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 
 	decoder := json.NewDecoder(f)
 	err = decoder.Decode(&metricValues.Values)
+	if err != nil {
+		return
+	}
 	switch metricValues.Values["_lastTime"].(type) {
 	case float64:
 		metricValues.Timestamp = time.Unix(int64(metricValues.Values["_lastTime"].(float64)), 0)
 	case int64:
 		metricValues.Timestamp = time.Unix(metricValues.Values["_lastTime"].(int64), 0)
 	}
-	if err != nil {
-		return
-	}
 	return
+}
+
+var errStateUpdated = errors.New("state was recently updated")
+
+func (h *MackerelPlugin) fetchLastValuesSafe(now time.Time) (metricValues MetricValues, err error) {
+	m, err := h.FetchLastValues()
+	if err != nil {
+		return m, err
+	}
+	if now.Sub(m.Timestamp) < time.Second {
+		return m, errStateUpdated
+	}
+	return m, nil
 }
 
 func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
@@ -331,7 +343,7 @@ func (h *MackerelPlugin) OutputValues() {
 	}
 	metricValues := MetricValues{Values: stat, Timestamp: time.Now()}
 
-	lastMetricValues, err := h.FetchLastValues()
+	lastMetricValues, err := h.fetchLastValuesSafe(metricValues.Timestamp)
 	if err != nil {
 		log.Println("FetchLastValues (ignore):", err)
 	}
