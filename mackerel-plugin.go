@@ -345,9 +345,6 @@ func (h *MackerelPlugin) OutputValues() {
 
 	lastMetricValues, err := h.fetchLastValuesSafe(metricValues.Timestamp)
 	if err != nil {
-		if err == errStateUpdated {
-			log.Fatalln("OutputValues: ", err)
-		}
 		log.Println("FetchLastValues (ignore):", err)
 	}
 
