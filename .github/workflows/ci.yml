@@ -14,6 +14,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
+    - uses: github/super-linter@v2.0.0
+      env:
+        VALIDATE_ALL_CODEBASE: true
+        VALIDATE_GO: true
+      if: startsWith(matrix.os, 'ubuntu-')
     - uses: actions/cache@v1
       with:
         path: ~/go/pkg/mod
@@ -23,9 +28,4 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go }}
-    - uses: github/super-linter@v2.0.0
-      env:
-        VALIDATE_ALL_CODEBASE: true
-        VALIDATE_GO: true
-      if: startsWith(matrix.os, 'ubuntu-')
     - run: go test ./...
