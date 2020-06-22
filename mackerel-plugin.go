@@ -237,6 +237,12 @@ func (h *MackerelPlugin) generateTempfilePath(args []string) string {
 	return filepath.Join(pluginutil.PluginWorkDir(), filename)
 }
 
+const (
+	metricTypeUint32 = "uint32"
+	metricTypeUint64 = "uint64"
+	metricTypeFloat  = "float64"
+)
+
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	name := metric.Name
 	if metric.AbsoluteName && len(prefix) > 0 {
@@ -250,9 +256,9 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 	switch value.(type) {
 	case string:
 		switch metric.Type {
-		case "uint32":
+		case metricTypeUint32:
 			value, _ = strconv.ParseUint(value.(string), 10, 32)
-		case "uint64":
+		case metricTypeUint64:
 			value, _ = strconv.ParseUint(value.(string), 10, 64)
 		default:
 			value, _ = strconv.ParseFloat(value.(string), 64)
@@ -268,9 +274,9 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 			}
 			var err error
 			switch metric.Type {
-			case "uint32":
+			case metricTypeUint32:
 				value, err = h.calcDiffUint32(toUint32(value), metricValues.Timestamp, toUint32(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
-			case "uint64":
+			case metricTypeUint64:
 				value, err = h.calcDiffUint64(toUint64(value), metricValues.Timestamp, toUint64(lastMetricValues.Values[name]), lastMetricValues.Timestamp, lastDiff)
 			default:
 				value, err = h.calcDiff(toFloat64(value), metricValues.Timestamp, toFloat64(lastMetricValues.Values[name]), lastMetricValues.Timestamp)
@@ -288,9 +294,9 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 
 	if metric.Scale != 0 {
 		switch metric.Type {
-		case "uint32":
+		case metricTypeUint32:
 			value = toUint32(value) * uint32(metric.Scale)
-		case "uint64":
+		case metricTypeUint64:
 			value = toUint64(value) * uint64(metric.Scale)
 		default:
 			value = toFloat64(value) * metric.Scale
