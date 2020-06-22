@@ -240,7 +240,7 @@ func (h *MackerelPlugin) generateTempfilePath(args []string) string {
 const (
 	metricTypeUint32 = "uint32"
 	metricTypeUint64 = "uint64"
-	metricTypeFloat  = "float64"
+	// metricTypeFloat  = "float64"
 )
 
 func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
