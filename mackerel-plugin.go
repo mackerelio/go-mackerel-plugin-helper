@@ -85,16 +85,16 @@ func (h *MackerelPlugin) hasDiff() bool {
 }
 
 func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, now time.Time) {
-	switch value.(type) {
+	switch v := value.(type) {
 	case uint32:
-		fmt.Fprintf(w, "%s\t%d\t%d\n", key, value.(uint32), now.Unix())
+		fmt.Fprintf(w, "%s\t%d\t%d\n", key, v, now.Unix())
 	case uint64:
-		fmt.Fprintf(w, "%s\t%d\t%d\n", key, value.(uint64), now.Unix())
+		fmt.Fprintf(w, "%s\t%d\t%d\n", key, v, now.Unix())
 	case float64:
-		if math.IsNaN(value.(float64)) || math.IsInf(value.(float64), 0) {
+		if math.IsNaN(value.(float64)) || math.IsInf(v, 0) {
 			log.Printf("Invalid value: key = %s, value = %f\n", key, value)
 		} else {
-			fmt.Fprintf(w, "%s\t%f\t%d\n", key, value.(float64), now.Unix())
+			fmt.Fprintf(w, "%s\t%f\t%d\n", key, v, now.Unix())
 		}
 	}
 }
@@ -118,11 +118,11 @@ func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error
 	if err != nil {
 		return
 	}
-	switch metricValues.Values["_lastTime"].(type) {
+	switch v := metricValues.Values["_lastTime"].(type) {
 	case float64:
-		metricValues.Timestamp = time.Unix(int64(metricValues.Values["_lastTime"].(float64)), 0)
+		metricValues.Timestamp = time.Unix(int64(v), 0)
 	case int64:
-		metricValues.Timestamp = time.Unix(metricValues.Values["_lastTime"].(int64), 0)
+		metricValues.Timestamp = time.Unix(v, 0)
 	}
 	return
 }
@@ -254,15 +254,15 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 	}
 
 	var err error
-	switch value.(type) {
+	switch v := value.(type) {
 	case string:
 		switch metric.Type {
 		case metricTypeUint32:
-			value, err = strconv.ParseUint(value.(string), 10, 32)
+			value, err = strconv.ParseUint(v, 10, 32)
 		case metricTypeUint64:
-			value, err = strconv.ParseUint(value.(string), 10, 64)
+			value, err = strconv.ParseUint(v, 10, 64)
 		default:
-			value, err = strconv.ParseFloat(value.(string), 64)
+			value, err = strconv.ParseFloat(v, 64)
 		}
 	}
 	if err != nil {
@@ -428,56 +428,57 @@ func (h *MackerelPlugin) OutputDefinitions() {
 }
 
 func toUint32(value interface{}) uint32 {
-	var ret uint32
-	switch value.(type) {
+	switch v := value.(type) {
 	case uint32:
-		ret = value.(uint32)
+		return v
 	case uint64:
-		ret = uint32(value.(uint64))
+		return uint32(v)
 	case float64:
-		ret = uint32(value.(float64))
+		return uint32(v)
 	case string:
-		v, err := strconv.ParseUint(value.(string), 10, 32)
-		if err == nil {
-			ret = uint32(v)
-		}
-	}
-	return ret
-}
-
-func toUint64(value interface{}) uint64 {
-	switch value.(type) {
-	case uint32:
-		return uint64(value.(uint32))
-	case uint64:
-		return value.(uint64)
-	case float64:
-		return uint64(value.(float64))
-	case string:
-		ret, err := strconv.ParseUint(value.(string), 10, 64)
+		n, err := strconv.ParseUint(v, 10, 32)
 		if err != nil {
 			return 0
 		}
-		return ret
+		return uint32(n)
+	default:
+		return 0
+	}
+}
+
+func toUint64(value interface{}) uint64 {
+	switch v := value.(type) {
+	case uint32:
+		return uint64(v)
+	case uint64:
+		return v
+	case float64:
+		return uint64(v)
+	case string:
+		n, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return 0
+		}
+		return n
 	default:
 		return 0
 	}
 }
 
 func toFloat64(value interface{}) float64 {
-	switch value.(type) {
+	switch v := value.(type) {
 	case uint32:
-		return float64(value.(uint32))
+		return float64(v)
 	case uint64:
-		return float64(value.(uint64))
+		return float64(v)
 	case float64:
-		return value.(float64)
+		return v
 	case string:
-		ret, err := strconv.ParseFloat(value.(string), 64)
+		n, err := strconv.ParseFloat(v, 64)
 		if err != nil {
 			return 0
 		}
-		return ret
+		return n
 	default:
 		return 0
 	}
