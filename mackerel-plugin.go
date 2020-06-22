@@ -253,16 +253,22 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 		return
 	}
 
+	var err error
 	switch value.(type) {
 	case string:
 		switch metric.Type {
 		case metricTypeUint32:
-			value, _ = strconv.ParseUint(value.(string), 10, 32)
+			value, err = strconv.ParseUint(value.(string), 10, 32)
 		case metricTypeUint64:
-			value, _ = strconv.ParseUint(value.(string), 10, 64)
+			value, err = strconv.ParseUint(value.(string), 10, 64)
 		default:
-			value, _ = strconv.ParseFloat(value.(string), 64)
+			value, err = strconv.ParseFloat(value.(string), 64)
 		}
+	}
+	if err != nil {
+		// For keeping compatibility, if each above statement occurred the error,
+		// then the value is set to 0 and continue.
+		log.Println("Parsing a value: ", err)
 	}
 
 	if metric.Diff {
@@ -440,31 +446,39 @@ func toUint32(value interface{}) uint32 {
 }
 
 func toUint64(value interface{}) uint64 {
-	var ret uint64
 	switch value.(type) {
 	case uint32:
-		ret = uint64(value.(uint32))
+		return uint64(value.(uint32))
 	case uint64:
-		ret = value.(uint64)
+		return value.(uint64)
 	case float64:
-		ret = uint64(value.(float64))
+		return uint64(value.(float64))
 	case string:
-		ret, _ = strconv.ParseUint(value.(string), 10, 64)
+		ret, err := strconv.ParseUint(value.(string), 10, 64)
+		if err != nil {
+			return 0
+		}
+		return ret
+	default:
+		return 0
 	}
-	return ret
 }
 
 func toFloat64(value interface{}) float64 {
-	var ret float64
 	switch value.(type) {
 	case uint32:
-		ret = float64(value.(uint32))
+		return float64(value.(uint32))
 	case uint64:
-		ret = float64(value.(uint64))
+		return float64(value.(uint64))
 	case float64:
-		ret = value.(float64)
+		return value.(float64)
 	case string:
-		ret, _ = strconv.ParseFloat(value.(string), 64)
+		ret, err := strconv.ParseFloat(value.(string), 64)
+		if err != nil {
+			return 0
+		}
+		return ret
+	default:
+		return 0
 	}
-	return ret
 }
