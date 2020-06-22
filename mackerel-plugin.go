@@ -164,7 +164,7 @@ func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
 func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float64, lastTime time.Time) (float64, error) {
 	diffTime := now.Unix() - lastTime.Unix()
 	if diffTime > 600 {
-		return 0, errors.New("Too long duration")
+		return 0, errors.New("too long duration")
 	}
 
 	diff := (value - lastValue) * 60 / float64(diffTime)
@@ -172,13 +172,13 @@ func (h *MackerelPlugin) calcDiff(value float64, now time.Time, lastValue float6
 	if lastValue <= value {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reset.")
+	return 0.0, errors.New("counter seems to be reset.")
 }
 
 func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue uint32, lastTime time.Time, lastDiff float64) (float64, error) {
 	diffTime := now.Unix() - lastTime.Unix()
 	if diffTime > 600 {
-		return 0, errors.New("Too long duration")
+		return 0, errors.New("too long duration")
 	}
 
 	diff := float64((value-lastValue)*60) / float64(diffTime)
@@ -186,14 +186,14 @@ func (h *MackerelPlugin) calcDiffUint32(value uint32, now time.Time, lastValue u
 	if lastValue <= value || diff < lastDiff*10 {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reset.")
+	return 0.0, errors.New("counter seems to be reset.")
 
 }
 
 func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue uint64, lastTime time.Time, lastDiff float64) (float64, error) {
 	diffTime := now.Unix() - lastTime.Unix()
 	if diffTime > 600 {
-		return 0, errors.New("Too long duration")
+		return 0, errors.New("too long duration")
 	}
 
 	diff := float64((value-lastValue)*60) / float64(diffTime)
@@ -201,7 +201,7 @@ func (h *MackerelPlugin) calcDiffUint64(value uint64, now time.Time, lastValue u
 	if lastValue <= value || diff < lastDiff*10 {
 		return diff, nil
 	}
-	return 0.0, errors.New("Counter seems to be reset.")
+	return 0.0, errors.New("counter seems to be reset.")
 }
 
 func (h *MackerelPlugin) tempfilename() string {
