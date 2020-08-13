@@ -99,6 +99,8 @@ func (h *MackerelPlugin) printValue(w io.Writer, key string, value interface{}, 
 	}
 }
 
+// FetchLastValues retrieves the last recorded metric value
+// if there is the graph-def that is set Diff to true in the result of h.GraphDefinition().
 func (h *MackerelPlugin) FetchLastValues() (metricValues MetricValues, err error) {
 	if !h.hasDiff() {
 		return
