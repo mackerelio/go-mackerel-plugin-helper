@@ -1,10 +1,9 @@
 .PHONY: deps
 deps:
-	GO111MODULE=off go get golang.org/x/lint/golint
+	go install golang.org/x/lint/golint
 
 .PHONY: lint
 lint: deps
-	go vet -all .
 	golint -set_exit_status .
 
 .PHONY: test

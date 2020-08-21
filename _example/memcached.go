@@ -98,8 +98,7 @@ func (m MemcachedPlugin) ParseStats(conn io.Reader) (map[string]interface{}, err
 	stat := make(map[string]interface{})
 
 	for scanner.Scan() {
-		line := scanner.Text()
-		s := string(line)
+		s := scanner.Text()
 		if s == "END" {
 			return stat, nil
 		}

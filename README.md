@@ -1,4 +1,4 @@
-go-mackerel-plugin-helper [![Build Status](https://travis-ci.org/mackerelio/go-mackerel-plugin-helper.svg?branch=master)](https://travis-ci.org/mackerelio/go-mackerel-plugin)
+go-mackerel-plugin-helper [![Build Status](https://github.com/mackerelio/go-mackerel-plugin-helper/workflows/Build/badge.svg?branch=master)](https://github.com/mackerelio/go-mackerel-plugin-helper/actions?workflow=Build)
 ==================
 
 This package provides helper methods to create mackerel agent plugin easily.
