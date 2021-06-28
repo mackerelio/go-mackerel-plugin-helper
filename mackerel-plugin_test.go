@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -707,4 +708,56 @@ func TestPluginHasDiff(t *testing.T) {
 	if pHasntDiff.hasDiff() {
 		t.Errorf("something went wrong")
 	}
+}
+
+func TestSaveStateIfContainsInvalidNumbers(t *testing.T) {
+	p := NewMackerelPlugin(testPHasDiff{})
+	f := createTempState(t)
+	defer f.Close()
+	p.Tempfile = f.Name()
+
+	stats := map[string]interface{}{
+		"key1": 3.0,
+		"key2": math.Inf(1),
+		"key3": math.Inf(-1),
+		"key4": math.NaN(),
+	}
+	const lastTime = 1624848982
+
+	now := time.Unix(lastTime, 0)
+	values := MetricValues{
+		Values:    stats,
+		Timestamp: now,
+	}
+	if err := p.saveValues(values); err != nil {
+		t.Errorf("saveValues: %v", err)
+	}
+	values, err := p.FetchLastValues()
+	if err != nil {
+		t.Fatal("FetchLastValues:", err)
+	}
+	want := MetricValues{
+		Values: map[string]interface{}{
+			"_lastTime": float64(lastTime),
+			"key1":      3.0,
+		},
+		Timestamp: now,
+	}
+	if !reflect.DeepEqual(values, want) {
+		t.Errorf("saveValues stores only valid numbers: got %v; want %v", values, want)
+	}
+}
+
+func createTempState(t testing.TB) *os.File {
+	t.Helper()
+	f, err := ioutil.TempFile("", "mackerel-plugin.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Remove(f.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+	return f
 }
