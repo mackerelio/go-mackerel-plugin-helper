@@ -153,6 +153,20 @@ func (h *MackerelPlugin) saveValues(metricValues MetricValues) error {
 	}
 	defer f.Close()
 
+	// Since Go 1.15 strconv.ParseFloat returns +Inf if it couldn't parse a string.
+	// But JSON does not accept invalid numbers, such as +Inf, -Inf or NaN.
+	// We perhaps have some plugins that is affected above change,
+	// so saveState should clear invalid numbers in the values before saving it.
+	for k, v := range metricValues.Values {
+		f, ok := v.(float64)
+		if !ok {
+			continue
+		}
+		if math.IsInf(f, 0) || math.IsNaN(f) {
+			delete(metricValues.Values, k)
+		}
+	}
+
 	metricValues.Values["_lastTime"] = metricValues.Timestamp.Unix()
 	encoder := json.NewEncoder(f)
 	err = encoder.Encode(metricValues.Values)
