@@ -117,7 +117,7 @@ func TestPrintValueUint32(t *testing.T) {
 
 	expected := []byte("test\t10\t1437227240\n")
 
-	if bytes.Compare(expected, s.Bytes()) != 0 {
+	if !bytes.Equal(expected, s.Bytes()) {
 		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
 	}
 }
@@ -130,7 +130,7 @@ func TestPrintValueUint64(t *testing.T) {
 
 	expected := []byte("test\t10\t1437227240\n")
 
-	if bytes.Compare(expected, s.Bytes()) != 0 {
+	if !bytes.Equal(expected, s.Bytes()) {
 		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
 	}
 }
@@ -143,7 +143,7 @@ func TestPrintValueFloat64(t *testing.T) {
 
 	expected := []byte("test\t10.000000\t1437227240\n")
 
-	if bytes.Compare(expected, s.Bytes()) != 0 {
+	if !bytes.Equal(expected, s.Bytes()) {
 		t.Fatalf("not matched, expected: %s, got: %s", expected, s)
 	}
 }
