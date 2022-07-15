@@ -1,6 +1,6 @@
 .PHONY: deps
 deps:
-	go install golang.org/x/lint/golint
+	go install golang.org/x/lint/golint@latest
 
 .PHONY: lint
 lint: deps
