@@ -1,4 +1,4 @@
-// Deprecated: go-mackerel-plugin-helper is still maintained but we recommend to use go-mackerel-plugin instead.
+// Deprecated: go-mackerel-plugin-helper is still maintained, but we recommend using go-mackerel-plugin instead.
 module github.com/mackerelio/go-mackerel-plugin-helper
 
 go 1.17
