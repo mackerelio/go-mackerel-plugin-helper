@@ -15,6 +15,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/mackerelio/golib/pluginutil"
 )
 
@@ -402,7 +405,7 @@ type GraphDef struct {
 
 func title(s string) string {
 	r := strings.NewReplacer(".", " ", "_", " ")
-	return strings.Title(r.Replace(s))
+	return cases.Title(language.Und, cases.NoLower).String(r.Replace(s))
 }
 
 // OutputDefinitions outputs graph definitions
