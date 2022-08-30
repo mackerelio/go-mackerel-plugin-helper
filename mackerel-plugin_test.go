@@ -191,7 +191,10 @@ func TestFetchLastValues_readStateSameTime(t *testing.T) {
 		Values:    make(map[string]interface{}),
 		Timestamp: time.Now(),
 	}
-	mp.saveValues(metricValues)
+	err = mp.saveValues(metricValues)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	_, err = mp.fetchLastValuesSafe(metricValues.Timestamp)
 	if err != errStateUpdated {
