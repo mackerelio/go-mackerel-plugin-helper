@@ -1,0 +1,9 @@
+linters-settings:
+  # There was a naming convention mismatch in Example*.
+  # It depends on the output test. Thus, we decide to disable govet.tests, govet.fieldalignment in this package.
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+      - tests
+

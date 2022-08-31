@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -180,7 +179,7 @@ func TestFetchLastValues_stateFileNotFound(t *testing.T) {
 func TestFetchLastValues_readStateSameTime(t *testing.T) {
 	var mp MackerelPlugin
 	mp.Plugin = &emptyPlugin{}
-	f, err := ioutil.TempFile("", "mackerel-plugin-helper.")
+	f, err := os.CreateTemp("", "mackerel-plugin-helper.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +191,10 @@ func TestFetchLastValues_readStateSameTime(t *testing.T) {
 		Values:    make(map[string]interface{}),
 		Timestamp: time.Now(),
 	}
-	mp.saveValues(metricValues)
+	err = mp.saveValues(metricValues)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	_, err = mp.fetchLastValuesSafe(metricValues.Timestamp)
 	if err != errStateUpdated {
@@ -750,7 +752,7 @@ func TestSaveStateIfContainsInvalidNumbers(t *testing.T) {
 
 func createTempState(t testing.TB) *os.File {
 	t.Helper()
-	f, err := ioutil.TempFile("", "mackerel-plugin.")
+	f, err := os.CreateTemp("", "mackerel-plugin.")
 	if err != nil {
 		t.Fatal(err)
 	}
