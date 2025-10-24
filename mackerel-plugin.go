@@ -340,9 +340,9 @@ func (h *MackerelPlugin) formatValues(prefix string, metric Metrics, metricValue
 
 func (h *MackerelPlugin) formatValuesWithWildcard(prefix string, metric Metrics, metricValues MetricValues, lastMetricValues MetricValues) {
 	regexpStr := `\A` + prefix + "." + metric.Name
-	regexpStr = strings.Replace(regexpStr, ".", "\\.", -1)
-	regexpStr = strings.Replace(regexpStr, "*", "[-a-zA-Z0-9_]+", -1)
-	regexpStr = strings.Replace(regexpStr, "#", "[-a-zA-Z0-9_]+", -1)
+	regexpStr = strings.ReplaceAll(regexpStr, ".", "\\.")
+	regexpStr = strings.ReplaceAll(regexpStr, "*", "[-a-zA-Z0-9_]+")
+	regexpStr = strings.ReplaceAll(regexpStr, "#", "[-a-zA-Z0-9_]+")
 	re, err := regexp.Compile(regexpStr)
 	if err != nil {
 		log.Fatalln("Failed to compile regexp: ", err)
