@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -202,7 +204,55 @@ func TestFetchLastValues_readStateSameTime(t *testing.T) {
 	}
 }
 
-func ExampleFormatValues() {
+func getFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
+
+func TestOutput(t *testing.T) {
+	var tests = []func() []string{
+		tcFormatValues,
+		tcFormatValuesAbsoluteName,
+		tcFormatValuesAbsoluteNameButNoPrefix,
+		tcFormatValuesWithCounterReset,
+		tcFormatFloatValuesWithCounterReset,
+		tcFormatValuesWithOverflow,
+		tcFormatValuesWithOverflowAndTooHighDifference,
+		tcFormatValuesWithOverflowAndNoLastDiff,
+		tcFormatValuesWithWildcard,
+		tcFormatValuesWithWildcardAndAbsoluteName,
+		tcFormatValuesWithWildcardAndNoDiff,
+		tcFormatValuesWithWildcardAstarisk,
+		tcOutputDefinitions,
+		tcPluginWithPrefixOutputDefinitions,
+		tcPluginWithPrefixOutputValues,
+		tcPluginWithPrefixOutputValues2,
+	}
+
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("TestOutput %s", getFunctionName(tc)), func(t *testing.T) {
+			orig := os.Stdout
+			t.Cleanup(func() { os.Stdout = orig })
+
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+
+			wants := tc()
+			w.Close()
+			actual, _ := io.ReadAll(r)
+
+			expected := strings.Join(wants, "\n")
+			if len(wants) > 0 {
+				expected += "\n"
+			}
+
+			if string(actual) != expected {
+				t.Error("Failure!")
+			}
+		})
+	}
+}
+
+func tcFormatValues() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
@@ -217,11 +267,10 @@ func ExampleFormatValues() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.cmd_get	500.000000	1437227240
+	return []string{"foo.cmd_get	500.000000	1437227240"}
 }
 
-func ExampleFormatValuesAbsoluteName() {
+func tcFormatValuesAbsoluteName() []string {
 	var mp MackerelPlugin
 	prefixA := "foo"
 	metricA := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
@@ -239,12 +288,13 @@ func ExampleFormatValuesAbsoluteName() {
 	mp.formatValues(prefixA, metricA, metricValues, lastMetricValues)
 	mp.formatValues(prefixB, metricB, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.cmd_get	500.000000	1437227240
-	// bar.cmd_get	634.000000	1437227240
+	return []string{
+		"foo.cmd_get	500.000000	1437227240",
+		"bar.cmd_get	634.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesAbsoluteNameButNoPrefix() {
+func tcFormatValuesAbsoluteNameButNoPrefix() []string {
 	var mp MackerelPlugin
 	prefix := ""
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64", AbsoluteName: true}
@@ -259,11 +309,12 @@ func ExampleFormatValuesAbsoluteNameButNoPrefix() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// cmd_get	500.000000	1437227240
+	return []string{
+		"cmd_get	500.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesWithCounterReset() {
+func tcFormatValuesWithCounterReset() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
@@ -278,10 +329,10 @@ func ExampleFormatValuesWithCounterReset() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
+	return nil
 }
 
-func ExampleFormatFloatValuesWithCounterReset() {
+func tcFormatFloatValuesWithCounterReset() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "float"}
@@ -296,10 +347,10 @@ func ExampleFormatFloatValuesWithCounterReset() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
+	return nil
 }
 
-func ExampleFormatValuesWithOverflow() {
+func tcFormatValuesWithOverflow() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
@@ -314,11 +365,12 @@ func ExampleFormatValuesWithOverflow() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.cmd_get	601.000000	1437227240
+	return []string{
+		"foo.cmd_get	601.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesWithOverflowAndTooHighDifference() {
+func tcFormatValuesWithOverflowAndTooHighDifference() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
@@ -333,10 +385,10 @@ func ExampleFormatValuesWithOverflowAndTooHighDifference() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
+	return nil
 }
 
-func ExampleFormatValuesWithOverflowAndNoLastDiff() {
+func tcFormatValuesWithOverflowAndNoLastDiff() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "cmd_get", Label: "Get", Diff: true, Type: "uint64"}
@@ -351,10 +403,10 @@ func ExampleFormatValuesWithOverflowAndNoLastDiff() {
 	}
 	mp.formatValues(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
+	return nil
 }
 
-func ExampleFormatValuesWithWildcard() {
+func tcFormatValuesWithWildcard() []string {
 	var mp MackerelPlugin
 	prefix := "foo.#"
 	metric := Metrics{Name: "bar", Label: "Get", Diff: true, Type: "uint64"}
@@ -369,11 +421,12 @@ func ExampleFormatValuesWithWildcard() {
 	}
 	mp.formatValuesWithWildcard(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.1.bar	500.000000	1437227240
+	return []string{
+		"foo.1.bar	500.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesWithWildcardAndAbsoluteName() {
+func tcFormatValuesWithWildcardAndAbsoluteName() []string {
 	// AbsoluteName should be ignored with WildCard
 	var mp MackerelPlugin
 	prefix := "foo.#"
@@ -389,11 +442,12 @@ func ExampleFormatValuesWithWildcardAndAbsoluteName() {
 	}
 	mp.formatValuesWithWildcard(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.1.bar	500.000000	1437227240
+	return []string{
+		"foo.1.bar	500.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesWithWildcardAndNoDiff() {
+func tcFormatValuesWithWildcardAndNoDiff() []string {
 	var mp MackerelPlugin
 	prefix := "foo.#"
 	metric := Metrics{Name: "bar", Label: "Get", Diff: false}
@@ -408,11 +462,12 @@ func ExampleFormatValuesWithWildcardAndNoDiff() {
 	}
 	mp.formatValuesWithWildcard(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.1.bar	1000.000000	1437227240
+	return []string{
+		"foo.1.bar	1000.000000	1437227240",
+	}
 }
 
-func ExampleFormatValuesWithWildcardAstarisk() {
+func tcFormatValuesWithWildcardAstarisk() []string {
 	var mp MackerelPlugin
 	prefix := "foo"
 	metric := Metrics{Name: "*", Label: "Get", Diff: true, Type: "uint64"}
@@ -427,8 +482,9 @@ func ExampleFormatValuesWithWildcardAstarisk() {
 	}
 	mp.formatValuesWithWildcard(prefix, metric, metricValues, lastMetricValues)
 
-	// Output:
-	// foo.1	500.000000	1437227240
+	return []string{
+		"foo.1	500.000000	1437227240",
+	}
 }
 
 // an example implementation
@@ -454,14 +510,15 @@ func (m MemcachedPlugin) FetchMetrics() (map[string]interface{}, error) {
 	return stat, nil
 }
 
-func ExampleOutputDefinitions() {
+func tcOutputDefinitions() []string {
 	var mp MemcachedPlugin
 	helper := NewMackerelPlugin(mp)
 	helper.OutputDefinitions()
 
-	// Output:
-	// # mackerel-agent-plugin
-	// {"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","stacked":false}]}}}
+	return []string{
+		"# mackerel-agent-plugin",
+		`{"graphs":{"memcached.cmd":{"label":"Memcached Command","unit":"integer","metrics":[{"name":"cmd_get","label":"Get","stacked":false}]}}}`,
+	}
 }
 
 func TestToUint32(t *testing.T) {
@@ -620,9 +677,7 @@ func TestSetTempfileWithBasename(t *testing.T) {
 		t.Errorf("p.SetTempfileByBasename() should set %s, but: %s", expect1, p.Tempfile)
 	}
 
-	origDir := os.Getenv("MACKEREL_PLUGIN_WORKDIR")
-	os.Setenv("MACKEREL_PLUGIN_WORKDIR", "/tmp/somewhere")
-	defer os.Setenv("MACKEREL_PLUGIN_WORKDIR", origDir)
+	t.Setenv("MACKEREL_PLUGIN_WORKDIR", "/tmp/somewhere")
 
 	expect2 := filepath.FromSlash("/tmp/somewhere/my-great-tempfile")
 	p.SetTempfileByBasename("my-great-tempfile")
@@ -631,16 +686,17 @@ func TestSetTempfileWithBasename(t *testing.T) {
 	}
 }
 
-func ExamplePluginWithPrefixOutputDefinitions() {
+func tcPluginWithPrefixOutputDefinitions() []string {
 	helper := NewMackerelPlugin(testP{})
 	helper.OutputDefinitions()
 
-	// Output:
-	// # mackerel-agent-plugin
-	// {"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","stacked":false}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","stacked":false}]}}}
+	return []string{
+		"# mackerel-agent-plugin",
+		`{"graphs":{"testP":{"label":"TestP","unit":"integer","metrics":[{"name":"bar","label":"Bar","stacked":false}]},"testP.fuga":{"label":"TestP Fuga","unit":"float","metrics":[{"name":"baz","label":"Baz","stacked":false}]}}}`,
+	}
 }
 
-func ExamplePluginWithPrefixOutputValues() {
+func tcPluginWithPrefixOutputValues() []string {
 	helper := NewMackerelPlugin(testP{})
 	stat, _ := helper.FetchMetrics()
 	key := ""
@@ -650,11 +706,12 @@ func ExamplePluginWithPrefixOutputValues() {
 	lastTime := time.Unix(0, 0)
 	helper.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
 
-	// Output:
-	// testP.bar	15.000000	1437227240
+	return []string{
+		"testP.bar	15.000000	1437227240",
+	}
 }
 
-func ExamplePluginWithPrefixOutputValues2() {
+func tcPluginWithPrefixOutputValues2() []string {
 	helper := NewMackerelPlugin(testP{})
 	stat, _ := helper.FetchMetrics()
 	key := "fuga"
@@ -664,8 +721,9 @@ func ExamplePluginWithPrefixOutputValues2() {
 	lastTime := time.Unix(0, 0)
 	helper.formatValues(key, metric, MetricValues{Values: stat, Timestamp: now}, MetricValues{Values: lastStat, Timestamp: lastTime})
 
-	// Output:
-	// testP.fuga.baz	18.000000	1437227240
+	return []string{
+		"testP.fuga.baz	18.000000	1437227240",
+	}
 }
 
 type testPHasDiff struct{}
